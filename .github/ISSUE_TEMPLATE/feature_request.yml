@@ -1,0 +1,21 @@
+name: Feature idea
+description: Propose content or a mechanic for a future tide
+labels: [idea]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: The idea
+      description: What is it, and what does it feel like in-game?
+    validations:
+      required: true
+  - type: input
+    id: tide
+    attributes:
+      label: Which tide does it belong to?
+      description: See ROADMAP.md (materials / gear / islands / structures, or a new one)
+  - type: textarea
+    id: why
+    attributes:
+      label: Why the End needs it
+      description: The bar is "makes the End worth staying in", not "more stuff".

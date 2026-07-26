@@ -1,0 +1,24 @@
+name: Bug report
+description: Something broke in-game or in the dev environment
+labels: [bug]
+body:
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Minecraft / NeoForge / Endrise
+      placeholder: "26.1.2 / 26.1.2.87 / 0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log or crash report
+      description: Drag in latest.log or the crash report if there is one.

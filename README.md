@@ -1,15 +1,34 @@
 # Endrise
 
-The End update, one tide at a time. A NeoForge mod for Minecraft 26.1.2.
+**The End update, one tide at a time.**
 
-Current content:
+Endrise is a NeoForge mod for Minecraft 26.1.2 that grows the End into a place worth staying. It starts where every good expansion starts, with something buried in the ground, and builds outward: materials, then gear, then blocks, then the islands themselves.
 
-- **Enderium Ore**: spawns in end stone across every End biome (veins of ~4, five tries per chunk, y16-72). Needs a diamond pickaxe. Drops raw enderium (Fortune works, Silk Touch gives the block).
-- **Raw Enderium → Enderium Ingot** via smelting or blasting.
+![Enderium ore, raw enderium, and enderium ingot](docs/textures-preview.png)
 
-## Dev
+## In the tide so far (v0.1.0)
 
-- `./gradlew runClient` starts a dev client with the mod loaded.
-- `./gradlew build` produces the jar in `build/libs/`.
-- Gradle wrapper is 9.5.1 (bumped from the MDK's 9.2.1, which cannot run on JDK 26). Compile toolchain is Java 25, auto-provisioned.
-- Worldgen is data-driven: `src/main/resources/data/endrise/worldgen/` + the NeoForge biome modifier in `data/endrise/neoforge/biome_modifier/`.
+- **Enderium Ore** generates in end stone across every End biome (veins of 4, five per chunk, y16-72). Diamond pickaxe required. Drops Raw Enderium; Fortune scales it, Silk Touch takes the block.
+- **Raw Enderium** smelts or blasts into **Enderium Ingots**.
+
+## Playing it
+
+No public release yet. Build from source:
+
+```bash
+./gradlew build
+```
+
+The jar lands in `build/libs/` and goes in the `mods/` folder of any NeoForge 26.1.2 instance.
+
+## Contributing
+
+Endrise is open to contributors. The plan lives in [ROADMAP.md](ROADMAP.md), the how lives in [CONTRIBUTING.md](CONTRIBUTING.md), and the dev loop is one command:
+
+```bash
+./gradlew runClient
+```
+
+## License
+
+[MIT](LICENSE).
