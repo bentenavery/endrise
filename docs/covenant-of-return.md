@@ -14,8 +14,16 @@ Budget: ~6 weekend-units across five shippable tides, every feature on both bran
 
 **Pitch.** Kick your enderium pickaxe off an island edge; 8 seconds later the chime you learned to trust brings it home. A netherite pick dropped beside it simply dies. Enderium also refuses the 5-minute despawn timer, and the materials float in lava like netherite. Death drops stay Soulbound's exclusive business.
 
+> **Probe findings 2026-07-27 (VoidReturnProbe, both branches):** the originally planned
+> `EntityLeaveLevelEvent` capture is dead on 26.x: the void kill wipes the ItemEntity's
+> stack to air BEFORE the event posts (1.21.1 still has the stack intact at event time).
+> One architecture that works on both: a periodic below-floor scan. Also learned: entities
+> don't tick in empty-server chunks (probe drives `entity.tick()` manually), and fake
+> players don't resolve through `getOwner()` (read the thrower UUID directly instead).
+> Open probe cases for the tide weekend: age-despawn event payload, thrower-UUID readability.
+
 **Deliverables**
-- Void capture: intercept ItemEntity removal below the kill plane via `EntityLeaveLevelEvent`, filtered to RemovalReason KILLED/DISCARDED only (never UNLOADED_TO_CHUNK, that's the dupe bug). Qualifies: `#endrise:void_returning` = the enderium gear tag + raw enderium, ingot, ore/storage block items, upgrade template.
+- Void capture: a lightweight scan every 10 ticks over item entities below `minY` (vanilla kills at `minY - 64`; items fall well under 40 blocks per 10 ticks, so the margin holds). Qualifying items are captured while still alive: stack and thrower UUID read directly, then discarded by us and routed into the return store. Qualifies: `#endrise:void_returning` = the enderium gear tag + raw enderium, ingot, ore/storage block items, upgrade template.
 - Death-drop exclusion: stamp every ItemEntity spawned during player drops with an `endrise:death_drop` flag at spawn time (not a thrower-alive check, which fast respawns defeat). All capture paths skip flagged entities. The rule, stated in the changelog: *dropped or lost comes back; died-with is Soulbound's job.*
 - Despawn rescue: age-despawn of marked items routes through the return path at any Y, guarded by stack-not-empty (kills the pickup/merge dupe class) and the death-drop flag.
 - Fire/lava float for enderium materials (gear already has it from v0.3): `fire_resistant` property on 1.21.1, `damage_resistant` + fire tag on 26.x, applied to raw/ingot/template (block items follow their blocks).
