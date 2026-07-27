@@ -7,6 +7,8 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 authors="Avery Palermini"
+displayURL="https://github.com/bentenavery/endrise"
+updateJSONURL="https://raw.githubusercontent.com/bentenavery/endrise/main/update.json"
 description='''
 The tide of the End is rising. Enderium seams now run through the end stone; the rest of the End update is on its way.
 '''
