@@ -1,5 +1,12 @@
 # The Covenant of Return — detailed designs for Tides 3-7
 
+> **v0.3 redesign note (2026-07-27):** this spec predates the enderium-tier pivot.
+> Enderium gear is now a first-class item tier above netherite (see ROADMAP), and the
+> infusion marker + trim system it references no longer carries behavior. Wherever this
+> document says "infused/trimmed gear", read "enderium gear"; wherever it proposes
+> mechanics on top of the marker component, the implementation target is the enderium
+> items. Numbers and pitches otherwise stand.
+
 Working spec distilled from a multi-lens design review (game feel, community prior art, technical feasibility, narrative identity, progression), including an adversarial critique pass. Budget: 6 weekend-units across five shippable tides, every feature on both branches (main = 26.x dev tip, `1.21.1` = LTS).
 
 **The rule that governs everything:** Soulbound owns death; infusion owns every other loss. Every return uses the same signature: ender chime, reverse-portal particles, 8-second delay.

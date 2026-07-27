@@ -2,19 +2,20 @@
 
 **The identity, one sentence:** in the End, nothing marked by enderium is ever truly lost, and each kind of loss has exactly one answer.
 
-Soulbound owns death. Infusion owns every other loss (the void, the despawn timer, fire). Every act of return shares one signature: the ender chime, reverse-portal particles, and the 8-second heartbeat.
+Soulbound owns death. Enderium gear owns every other loss (the void, the despawn timer, fire). Every act of return shares one signature: the ender chime, reverse-portal particles, and the 8-second heartbeat.
 
 Detailed designs (deliverables, risks, verification, per-version port notes) live in [docs/tides-3-7.md](docs/tides-3-7.md).
 
 ## Shipped
 
 - [x] **Tide 1 (v0.1) — Enderium**: ore in end stone across all End biomes, raw → ingot smelting
-- [x] **Tide 2 (v0.2) — Soulbound**: enderium armor trims, tool infusion via smithing template, the Soulbound enchantment, and gear that teleports back to its exact slots 8 seconds after you die
+- [x] **Tide 2 (v0.2) — Soulbound**: the Soulbound enchantment and gear that teleports back to its exact slots 8 seconds after you die. (Shipped infusion as a marker component + armor trims; superseded in v0.3.)
+- [x] **Tide 2.5 (v0.3) — The Enderium Tier**: enderium gear became real items, the tier above netherite. Netherite gear + upgrade template + enderium ingot transmutes at the smithing table, diamond-to-netherite style; enchantments and durability carry. Soulbound is enderium-exclusive. Full sprite set, worn armor, creative tab.
 
 ## The Covenant of Return (Tides 3-7, ~6 weekends total)
 
-- [ ] **Tide 3 (v0.3) — The Void Gives Back** *(1 weekend)*
-  Marked items (infused, trimmed, soulbound, or enderium materials) climb back out of the void, refuse the 5-minute despawn timer, and survive fire. Death drops are explicitly excluded so Soulbound keeps its monopoly on death. Ships the anvil hardening fix, plus ender pearl impact damage negated while wearing infused armor.
+- [ ] **Tide 3 (v0.3.x) — The Void Gives Back** *(1 weekend)*
+  Enderium gear climbs back out of the void, refuses the 5-minute despawn timer, and survives fire. Death drops are explicitly excluded so Soulbound keeps its monopoly on death. Anvil hardening shipped early in v0.2.1; still due: ender pearl impact damage negated while wearing enderium armor.
 
 - [ ] **Tide 4 (v0.4) — Set in Stone** *(1 weekend)*
   The End's masonry: Enderium Block (beacon base, 9-ingot sink), Polished End Stone + End Stone Tiles families with stairs/slabs, Chiseled tiles bearing the Mourner's Relief, and the Enderium Lantern with teal flame and upward-drifting embers. Pure data + datagen; this is the material palette the Cenotaphs are built from.
@@ -30,7 +31,7 @@ Detailed designs (deliverables, risks, verification, per-version port notes) liv
 
 ## Deliberately rejected (so contributors don't re-propose them)
 
-- **Enderium tool/armor tier**: unanimous no. Infusion IS the enderium gear identity; a parallel tier is stat noise and permanent double maintenance.
+- ~~**Enderium tool/armor tier**: unanimous no. Infusion IS the enderium gear identity.~~ **Overturned in v0.3** after playtesting: an invisible component never read as an upgrade in hand. Enderium is now a first-class tier above netherite, and infusion-as-marker is the rejected idea. Kept here as a reminder that playtests outrank design docs.
 - **A neutral mob**: the classic multi-weekend hobbyist stall (entity + AI + rendering on two branches). Needs real design first; revisit after v0.7.
 - **Enderium respawn anchor**: right idea, one tide too early; the Homeward Pearl delivers "you come back" cheaply. Strongest v0.8 candidate.
 - **Custom ambient audio**: generated audio is the asset class most likely to embarrass the release; vanilla sounds carry the atmosphere.

@@ -6,12 +6,12 @@ Endrise is a NeoForge mod for Minecraft 26.1.2 that grows the End into a place w
 
 ![Enderium ore, raw enderium, and enderium ingot](docs/textures-preview.png)
 
-## In the tide so far (v0.2.1)
+## In the tide so far (v0.3 dev)
 
 - **Enderium Ore** generates in end stone across every End biome (veins of 4, five per chunk, y16-72). Diamond pickaxe required. Drops Raw Enderium; Fortune scales it, Silk Touch takes the block.
 - **Raw Enderium** smelts or blasts into **Enderium Ingots**.
-- **Infusion**: the Enderium Upgrade Smithing Template (7 end stone + popped chorus fruit + ingot) infuses diamond and netherite tools in place; armor counts through enderium **trims** (any pattern).
-- **Soulbound**: an anvil-only enchantment for infused/trimmed gear. Die, and eight seconds later the gear teleports back into the slots it left. Survives restarts, void deaths included.
+- **Enderium gear**: the tier above netherite. Full tool and armor set, own look. Craft the Enderium Upgrade Smithing Template (7 end stone + popped chorus fruit + ingot), then upgrade netherite gear at the smithing table the same way diamond became netherite. Enchantments and durability carry.
+- **Soulbound**: an anvil-only enchantment, exclusive to enderium gear. Die, and eight seconds later the gear teleports back into the slots it left. Survives restarts, void deaths included.
 
 ## Playing it
 
