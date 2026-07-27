@@ -36,7 +36,9 @@ public class SoulboundStore extends SavedData {
     private final Map<UUID, List<Pending>> pending = new HashMap<>();
 
     public static final Codec<SoulboundStore> CODEC =
-            Codec.unboundedMap(UUIDUtil.CODEC, Pending.CODEC.listOf())
+            // STRING_CODEC is load-bearing: NBT map keys must be strings, and the
+            // int-array UUID codec makes every save throw once an entry is pending
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, Pending.CODEC.listOf())
                     .xmap(SoulboundStore::fromMap, store -> Map.copyOf(store.pending));
 
     public static final SavedDataType<SoulboundStore> TYPE =

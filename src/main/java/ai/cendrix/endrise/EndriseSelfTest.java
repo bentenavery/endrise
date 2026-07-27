@@ -77,12 +77,17 @@ public final class EndriseSelfTest {
             tossed = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get(), 2), false);
             diamond = player.drop(new ItemStack(Items.DIAMOND_PICKAXE), false);
             deathDrop = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
-            deathDrop.getPersistentData().putBoolean(VoidReturn.TAG_DEATH_DROP, true);
+            net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA,
+                    deathDrop.getItem(), tag -> {
+                        tag.putBoolean(VoidReturn.TAG_DEATH_DROP, true);
+                        tag.remove(VoidReturn.TAG_OWNER);
+                    });
             expiring = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
         } else if (t == 6) {
-            voidOk &= report(tossed != null
-                            && !tossed.getPersistentData().getStringOr(VoidReturn.TAG_OWNER, "").isEmpty(),
-                    "void: player toss stamps the dropper UUID");
+            var stampData = tossed == null ? null : tossed.getItem().get(DataComponents.CUSTOM_DATA);
+            voidOk &= report(stampData != null
+                            && !stampData.copyTag().getStringOr(VoidReturn.TAG_OWNER, "").isEmpty(),
+                    "void: player toss stamps the dropper UUID into the stack");
             var indexed = level.getEntities(net.minecraft.world.entity.EntityType.ITEM, e -> true);
             Endrise.LOGGER.info("[SELFTEST-DBG] indexed items after ticks: {} (expect 4)", indexed.size());
             tossed.setPos(tossed.getX(), level.getMinY() - 10, tossed.getZ());
@@ -130,6 +135,45 @@ public final class EndriseSelfTest {
             player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
             voidOk &= report(withBoots && !VoidReturn.negatesPearl(player),
                     "pearl: negation requires an enderium armor piece");
+
+            // Marked and clean stacks must never merge (marker laundering regression)
+            ItemStack marked = new ItemStack(Endrise.ENDERIUM_INGOT.get());
+            net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA,
+                    marked, tag -> tag.putString(VoidReturn.TAG_OWNER, player.getStringUUID()));
+            voidOk &= report(!ItemStack.isSameItemSameComponents(marked, new ItemStack(Endrise.ENDERIUM_INGOT.get())),
+                    "void: marked stacks refuse to merge with clean ones");
+
+            // Toss below the kill plane is captured synchronously (panic-drop regression)
+            player.setPos(player.getX(), level.getMinY() - 70, player.getZ());
+            ItemEntity deepToss = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
+            player.setPos(player.getX(), 80, player.getZ());
+            var deepCaptured = store.takeReady(player.getUUID(), farFuture);
+            voidOk &= report(deepToss != null && deepToss.getItem().isEmpty() && deepCaptured.size() == 1,
+                    "void: toss below the kill plane is captured at toss time");
+
+            // Delivery waits out the death screen (respawn-wipe regression)
+            int baseline = player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get());
+            store.add(player.getUUID(), new SoulboundStore.Pending(VoidReturn.SLOT_ANY,
+                    new ItemStack(Endrise.ENDERIUM_INGOT.get()), level.getGameTime()));
+            player.setHealth(0.0F);
+            boolean heldWhileDead = !SoulboundEvents.deliverPendingFor(store, (ServerPlayer) player, farFuture);
+            player.setHealth(20.0F);
+            boolean deliveredAfter = SoulboundEvents.deliverPendingFor(store, (ServerPlayer) player, farFuture);
+            voidOk &= report(heldWhileDead && deliveredAfter
+                            && player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get()) == baseline + 1,
+                    "void: delivery waits out the death screen, lands after revival");
+
+            // The store codec must round-trip a pending entry (save-crash regression)
+            SoulboundStore probe = new SoulboundStore();
+            probe.add(player.getUUID(), new SoulboundStore.Pending(3,
+                    new ItemStack(Endrise.ENDERIUM_INGOT.get()), 42L));
+            var ops = net.minecraft.resources.RegistryOps.create(
+                    net.minecraft.nbt.NbtOps.INSTANCE, server.registryAccess());
+            var encoded = SoulboundStore.CODEC.encodeStart(ops, probe).result();
+            boolean roundTrips = encoded.isPresent()
+                    && SoulboundStore.CODEC.parse(ops, encoded.get()).result()
+                            .map(s -> s.takeReady(player.getUUID(), 100L).size() == 1).orElse(false);
+            voidOk &= report(roundTrips, "store: codec round-trips a pending entry (save-crash regression)");
 
             boolean ok = immediateOk && voidOk;
             Endrise.LOGGER.info("[SELFTEST] {}", ok ? "ALL PASS" : "FAILURES PRESENT");

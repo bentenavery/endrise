@@ -3,41 +3,49 @@ package ai.cendrix.endrise;
 import java.util.List;
 import java.util.UUID;
 
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
-import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.EntityTeleportEvent;
 import net.neoforged.neoforge.event.entity.item.ItemExpireEvent;
 import net.neoforged.neoforge.event.entity.item.ItemTossEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /**
  * Tide 4: the void gives back. Enderium items dropped by a player return to them
  * instead of dying to the void or the despawn timer.
  *
- * Capture is a periodic below-floor scan, NOT EntityLeaveLevelEvent: the probe
- * proved 26.x wipes the item's stack before that event posts. The scan reads
- * items while they are still alive, with 64 blocks of margin above vanilla's
- * kill plane (minY - 64). Despawn rescue hooks ItemExpireEvent, which fires
- * before the age discard with the entity intact.
+ * Capture points (adversarial review shaped all three):
+ * - Toss below the world floor: captured synchronously at toss time, because an
+ *   item spawned under the kill plane is discarded by its own first tick, before
+ *   any scan could see it (the panic-drop-while-falling flagship case).
+ * - Below-floor scan every 10 ticks: catches items that FALL into the void.
+ *   EntityLeaveLevelEvent is useless here: 26.x wipes the stack before it posts.
+ * - ItemExpireEvent: age-despawn rescue, entity intact pre-discard.
  *
- * Ownership is self-stamped: ItemTossEvent writes the dropper's UUID into the
- * entity's persistent data (vanilla's thrower field is not reliably readable).
- * Death drops are flagged at spawn time and excluded from every capture path,
- * so Soulbound keeps its monopoly on death.
+ * Ownership and the death flag live in the STACK's custom data, not entity NBT:
+ * vanilla merges item entities by comparing stacks only, so entity-level markers
+ * could be laundered off death drops (or stripped from protected drops) by a
+ * merge. Component markers make differently-marked stacks unmergeable by
+ * construction. They are stripped on pickup and on capture, so inventories
+ * never see them. Death drops are flagged at LivingDropsEvent time and excluded
+ * from every capture path: Soulbound keeps its monopoly on death.
  */
 @EventBusSubscriber(modid = Endrise.MODID)
 public final class VoidReturn {
@@ -59,12 +67,24 @@ public final class VoidReturn {
 
     private VoidReturn() {}
 
-    /** Every player-dropped item remembers who dropped it. */
+    /** Every player-dropped item remembers its dropper in the stack itself. */
     @SubscribeEvent
     static void onItemToss(ItemTossEvent event) {
         Player player = event.getPlayer();
-        if (player != null && !player.level().isClientSide()) {
-            event.getEntity().getPersistentData().putString(TAG_OWNER, player.getStringUUID());
+        ItemEntity entity = event.getEntity();
+        if (player == null || player.level().isClientSide()) {
+            return;
+        }
+        CustomData.update(DataComponents.CUSTOM_DATA, entity.getItem(),
+                tag -> tag.putString(TAG_OWNER, player.getStringUUID()));
+        // Tossed under the world floor: the entity dies on its own first tick,
+        // before any scan. Capture right now. isAlive() excludes death drops,
+        // which also pass through this event while the player is already dead.
+        if (player instanceof ServerPlayer serverPlayer && player.isAlive()
+                && entity.getY() < player.level().getMinY()) {
+            if (captureStack(serverPlayer.level().getServer(), serverPlayer.getUUID(), entity.getItem())) {
+                entity.setItem(ItemStack.EMPTY); // empty entities self-discard; nothing to dupe
+            }
         }
     }
 
@@ -75,10 +95,17 @@ public final class VoidReturn {
             return;
         }
         for (ItemEntity drop : event.getDrops()) {
-            CompoundTag data = drop.getPersistentData();
-            data.putBoolean(TAG_DEATH_DROP, true);
-            data.remove(TAG_OWNER);
+            CustomData.update(DataComponents.CUSTOM_DATA, drop.getItem(), tag -> {
+                tag.putBoolean(TAG_DEATH_DROP, true);
+                tag.remove(TAG_OWNER);
+            });
         }
+    }
+
+    /** Inventories never see the markers; stripping also keeps stacking clean. */
+    @SubscribeEvent
+    static void onPickup(ItemEntityPickupEvent.Pre event) {
+        stripMarkers(event.getItemEntity().getItem());
     }
 
     /** Despawn rescue: fires before the age discard, entity still intact. */
@@ -113,34 +140,75 @@ public final class VoidReturn {
     }
 
     private static void tryCapture(MinecraftServer server, ItemEntity item) {
-        if (item.isRemoved() || item.getItem().isEmpty() || !item.getItem().is(VOID_RETURNING)) {
+        if (item.isRemoved() || item.getItem().isEmpty()) {
             return;
         }
-        CompoundTag data = item.getPersistentData();
-        if (data.getBooleanOr(TAG_DEATH_DROP, false)) {
-            return;
+        UUID owner = markedOwner(item.getItem());
+        if (owner == null) {
+            return; // unmarked, death-flagged, or corrupt: vanilla behavior proceeds
         }
-        String owner = data.getStringOr(TAG_OWNER, "");
-        if (owner.isEmpty()) {
-            return; // hopper/dispenser drops die vanilla-style
+        if (captureStack(server, owner, item.getItem())) {
+            item.discard();
         }
-        UUID ownerId;
-        try {
-            ownerId = UUID.fromString(owner);
-        } catch (IllegalArgumentException e) {
-            return;
-        }
-        long readyAt = server.overworld().getGameTime() + Soulbound.RETURN_DELAY_TICKS;
-        SoulboundStore.get(server).add(ownerId,
-                new SoulboundStore.Pending(SLOT_ANY, item.getItem().copy(), readyAt));
-        item.discard();
     }
 
-    /** Ender pearl impact costs nothing while wearing any enderium armor piece. */
+    private static boolean captureStack(MinecraftServer server, UUID owner, ItemStack stack) {
+        if (stack.isEmpty() || !stack.is(VOID_RETURNING)) {
+            return false;
+        }
+        ItemStack rescued = stack.copy();
+        stripMarkers(rescued);
+        long readyAt = server.overworld().getGameTime() + Soulbound.RETURN_DELAY_TICKS;
+        SoulboundStore.get(server).add(owner, new SoulboundStore.Pending(SLOT_ANY, rescued, readyAt));
+        return true;
+    }
+
+    /** The dropper UUID, or null when absent, death-flagged, or unparseable. */
+    private static UUID markedOwner(ItemStack stack) {
+        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+        if (data == null) {
+            return null;
+        }
+        CompoundTag tag = data.copyTag();
+        if (tag.getBooleanOr(TAG_DEATH_DROP, false)) {
+            return null;
+        }
+        String owner = tag.getStringOr(TAG_OWNER, "");
+        if (owner.isEmpty()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(owner);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    static void stripMarkers(ItemStack stack) {
+        CustomData data = stack.get(DataComponents.CUSTOM_DATA);
+        if (data == null) {
+            return;
+        }
+        CompoundTag tag = data.copyTag();
+        tag.remove(TAG_OWNER);
+        tag.remove(TAG_DEATH_DROP);
+        if (tag.isEmpty()) {
+            stack.remove(DataComponents.CUSTOM_DATA);
+        } else {
+            stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        }
+    }
+
+    /**
+     * Ender pearl impact costs nothing while wearing any enderium armor piece.
+     * EntityTeleportEvent.EnderPearl is the version-stable seam: on 1.21.1 pearls
+     * deal plain fall-type damage, so a damage-source check cannot port safely.
+     */
     @SubscribeEvent
-    static void onIncomingDamage(LivingIncomingDamageEvent event) {
-        if (event.getSource().is(DamageTypes.ENDER_PEARL) && negatesPearl(event.getEntity())) {
-            event.setCanceled(true);
+    static void onEnderPearlTeleport(EntityTeleportEvent.EnderPearl event) {
+        ServerPlayer player = event.getPlayer();
+        if (player != null && negatesPearl(player)) {
+            event.setAttackDamage(0.0F);
         }
     }
 

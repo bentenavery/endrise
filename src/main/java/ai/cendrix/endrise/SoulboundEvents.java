@@ -72,18 +72,35 @@ public final class SoulboundEvents {
             return;
         }
         SoulboundStore store = SoulboundStore.get(server);
+        boolean delivered = false;
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            List<SoulboundStore.Pending> ready = store.takeReady(player.getUUID(), now);
-            if (ready.isEmpty()) {
-                continue;
-            }
-            for (SoulboundStore.Pending entry : ready) {
-                deliver(player, entry);
-            }
-            ServerLevel level = (ServerLevel) player.level();
-            level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
-            level.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 32, 0.4, 0.6, 0.4, 0.3);
+            delivered |= deliverPendingFor(store, player, now);
         }
+        if (delivered) {
+            // Persist the drained entries now: player .dat files save on logout but
+            // the store only saves with the level, and that skew is a crash-dupe.
+            server.overworld().getDataStorage().scheduleSave();
+        }
+    }
+
+    /** Package-private for the self-test. Returns true when anything was delivered. */
+    static boolean deliverPendingFor(SoulboundStore store, ServerPlayer player, long now) {
+        // A corpse on the death screen still sits in the player list; anything
+        // delivered to it is wiped by respawn. Entries wait for the living.
+        if (!player.isAlive()) {
+            return false;
+        }
+        List<SoulboundStore.Pending> ready = store.takeReady(player.getUUID(), now);
+        if (ready.isEmpty()) {
+            return false;
+        }
+        for (SoulboundStore.Pending entry : ready) {
+            deliver(player, entry);
+        }
+        ServerLevel level = (ServerLevel) player.level();
+        level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0F, 1.0F);
+        level.sendParticles(ParticleTypes.PORTAL, player.getX(), player.getY() + 1.0, player.getZ(), 32, 0.4, 0.6, 0.4, 0.3);
+        return true;
     }
 
     static void deliver(ServerPlayer player, SoulboundStore.Pending entry) {
