@@ -1,5 +1,6 @@
 package ai.cendrix.endrise;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -24,6 +25,10 @@ public class EndriseClient {
         if (Soulbound.isInfused(event.getItemStack())) {
             event.getToolTip().add(Component.translatable("tooltip.endrise.enderium_infused")
                     .withStyle(style -> style.withColor(ENDERIUM_TEAL)));
+        }
+        if (event.getItemStack().is(Endrise.ENDERIUM_UPGRADE_TEMPLATE.get())) {
+            event.getToolTip().add(Component.translatable("tooltip.endrise.enderium_upgrade_template")
+                    .withStyle(ChatFormatting.GRAY));
         }
     }
 }

@@ -6,7 +6,8 @@
   "result": {
     "id": "minecraft:diamond_pickaxe",
     "components": {
-      "endrise:enderium_infused": {}
+      "endrise:enderium_infused": {},
+      "minecraft:enchantment_glint_override": true
     }
   }
 }
