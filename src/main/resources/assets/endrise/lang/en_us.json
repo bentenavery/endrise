@@ -5,5 +5,6 @@
   "item.endrise.enderium_upgrade_smithing_template": "Enderium Upgrade Smithing Template",
   "enchantment.endrise.soulbound": "Soulbound",
   "trim_material.endrise.enderium": "Enderium Material",
-  "tooltip.endrise.enderium_infused": "Enderium-Infused"
+  "tooltip.endrise.enderium_infused": "Enderium-Infused",
+  "tooltip.endrise.enderium_upgrade_template": "Infuses tools at the smithing table. Armor infuses through an enderium trim instead."
 }
