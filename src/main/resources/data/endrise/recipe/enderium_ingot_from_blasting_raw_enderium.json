@@ -4,7 +4,9 @@
   "cookingtime": 100,
   "experience": 1.0,
   "group": "enderium_ingot",
-  "ingredient": "endrise:raw_enderium",
+  "ingredient": {
+    "item": "endrise:raw_enderium"
+  },
   "result": {
     "id": "endrise:enderium_ingot"
   }

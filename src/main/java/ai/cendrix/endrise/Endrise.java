@@ -9,6 +9,7 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -30,8 +31,10 @@ public class Endrise {
     // Enderium: the End's buried metal. Ore sits in end stone, drops raw enderium, smelts to ingots.
     // Where it spawns is data, not code: data/endrise/worldgen/* defines the veins,
     // data/endrise/neoforge/biome_modifier/ injects them into every #minecraft:is_end biome.
+    // 1.21.1 API: registerSimpleBlock takes Properties directly (newer versions take an operator lambda)
     public static final DeferredBlock<Block> ENDERIUM_ORE = BLOCKS.registerSimpleBlock("enderium_ore",
-            p -> p.mapColor(MapColor.SAND)
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
                     .strength(3.0F, 9.0F) // end stone's hardness and blast resistance, so veins feel native
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE));
