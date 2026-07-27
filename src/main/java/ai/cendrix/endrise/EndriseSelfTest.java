@@ -98,7 +98,36 @@ public final class EndriseSelfTest {
                 "smithing: upgrade template + tool + ingot infuses (tool path)");
         ok &= smith(player, upgradeTemplate, chestplate, ingot, false,
                 "smithing: upgrade template + armor has no recipe (tools only, by design)");
+
+        // GUI slot gates: the real screen consults mayPlace before a recipe ever runs.
+        SmithingMenu gui = new SmithingMenu(1, player.getInventory());
+        ok &= report(gui.getSlot(0).mayPlace(trimTemplate),
+                "smithing GUI: trim template accepted by template slot");
+        ok &= report(gui.getSlot(0).mayPlace(upgradeTemplate),
+                "smithing GUI: enderium upgrade template accepted by template slot");
+        ok &= report(gui.getSlot(1).mayPlace(chestplate),
+                "smithing GUI: armor accepted by base slot");
+        ok &= report(gui.getSlot(2).mayPlace(ingot),
+                "smithing GUI: enderium ingot accepted by addition slot");
+
+        // Vanilla rejects re-applying the IDENTICAL trim; a different pattern overwrites.
+        // (This is why testing on the already-trimmed photo-studio set errors.)
+        SmithingMenu prep = new SmithingMenu(1, player.getInventory());
+        prep.getSlot(0).set(trimTemplate.copy());
+        prep.getSlot(1).set(new ItemStack(Items.NETHERITE_CHESTPLATE));
+        prep.getSlot(2).set(ingot.copy());
+        prep.createResult();
+        ItemStack onceTrimmed = prep.getSlot(3).getItem();
+        ok &= smith(player, trimTemplate, onceTrimmed, ingot, false,
+                "smithing: identical trim re-applied is refused (vanilla rule)");
+        ok &= smith(player, new ItemStack(Items.DUNE_ARMOR_TRIM_SMITHING_TEMPLATE), onceTrimmed, ingot, true,
+                "smithing: different pattern overwrites an existing trim");
         return ok;
+    }
+
+    private static boolean report(boolean pass, String label) {
+        Endrise.LOGGER.info("[SELFTEST] {}: {}", pass ? "PASS" : "FAIL", label);
+        return pass;
     }
 
     private static boolean smith(Player player, ItemStack template, ItemStack base,
