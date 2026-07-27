@@ -105,16 +105,21 @@ public final class SoulboundEvents {
         }
     }
 
-    /** Soulbound books only apply to enderium-infused (or enderium-trimmed) gear. */
+    /** Soulbound only lands on enderium-infused (or enderium-trimmed) gear, whether it
+     *  arrives from a book (stored enchantments) or a sacrificed item (live enchantments). */
     @SubscribeEvent
     static void onAnvilUpdate(AnvilUpdateEvent event) {
-        ItemEnchantments stored = event.getRight().get(DataComponents.STORED_ENCHANTMENTS);
-        if (stored == null || stored.isEmpty()) {
+        if (Soulbound.isInfused(event.getLeft())) {
             return;
         }
-        boolean hasSoulbound = stored.keySet().stream().anyMatch(h -> h.is(Soulbound.KEY));
-        if (hasSoulbound && !Soulbound.isInfused(event.getLeft())) {
+        ItemStack right = event.getRight();
+        if (carriesSoulbound(right.get(DataComponents.STORED_ENCHANTMENTS))
+                || carriesSoulbound(right.get(DataComponents.ENCHANTMENTS))) {
             event.setCanceled(true);
         }
+    }
+
+    private static boolean carriesSoulbound(ItemEnchantments enchantments) {
+        return enchantments != null && enchantments.keySet().stream().anyMatch(h -> h.is(Soulbound.KEY));
     }
 }
