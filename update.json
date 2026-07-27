@@ -1,0 +1,19 @@
+{
+  "homepage": "https://github.com/bentenavery/endrise/releases",
+  "promos": {
+    "26.1.2-latest": "0.2.1",
+    "26.1.2-recommended": "0.2.1",
+    "1.21.1-latest": "0.2.1",
+    "1.21.1-recommended": "0.2.1"
+  },
+  "26.1.2": {
+    "0.2.1": "Fix: the anvil no longer lets a soulbound tool sacrifice smuggle Soulbound onto non-infused gear.",
+    "0.2.0": "Enderium infusion + Soulbound: gear that comes back from death.",
+    "0.1.0": "Enderium ore, raw enderium, ingots, End worldgen."
+  },
+  "1.21.1": {
+    "0.2.1": "Fix: the anvil no longer lets a soulbound tool sacrifice smuggle Soulbound onto non-infused gear.",
+    "0.2.0": "Enderium infusion + Soulbound: gear that comes back from death.",
+    "0.1.0": "Enderium ore, raw enderium, ingots, End worldgen."
+  }
+}
