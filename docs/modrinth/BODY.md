@@ -6,20 +6,20 @@ Endrise is a slow-building End update for NeoForge. It starts where the End itse
 
 Seams of enderium ore run through end stone across the outer islands. Mine it with a diamond pick (Silk Touch and Fortune both respected), smelt or blast the raw enderium into ingots.
 
-## Infusion
+## The Enderium Tier
 
-Enderium is not a tool tier. Infusion is the tier.
+The tier above netherite, earned the same way netherite was.
 
 - Craft the **Enderium Upgrade Smithing Template**: 7 end stone + popped chorus fruit + enderium ingot
-- Smith it onto diamond or netherite tools. Enchantments and durability carry over
-- Armor counts through trims: enderium ingots are a trim material, any pattern, at the smithing table
+- Netherite gear + template + enderium ingot at the smithing table becomes enderium gear. Enchantments and durability carry over
+- Full set: sword, pickaxe, axe, shovel, hoe, and all four armor pieces, with their own look. Teal metal, purple core
 
 ## Soulbound
 
-The End gives things back.
+The End gives things back, but only to its own.
 
 - Craft the Soulbound book: 3 enderium ingots + 2 ender pearls + a book
-- Anvil-only, and the anvil accepts it only on enderium-infused or enderium-trimmed gear
+- Anvil-only, and the anvil accepts it only on enderium gear
 - When you die, soulbound gear skips the drop. Eight seconds later it teleports back into the inventory slots it left, with the ender sound to prove it. Survives server restarts. Void deaths included.
 
 ## Versions
