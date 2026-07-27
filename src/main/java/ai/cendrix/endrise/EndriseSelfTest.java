@@ -96,8 +96,15 @@ public final class EndriseSelfTest {
                 "smithing: trim pattern + armor + enderium ingot trims (armor path)");
         ok &= smith(player, upgradeTemplate, pick, ingot, true,
                 "smithing: upgrade template + tool + ingot infuses (tool path)");
-        ok &= smith(player, upgradeTemplate, chestplate, ingot, false,
-                "smithing: upgrade template + armor has no recipe (tools only, by design)");
+        SmithingMenu armorUp = new SmithingMenu(1, player.getInventory());
+        armorUp.getSlot(0).set(upgradeTemplate.copy());
+        armorUp.getSlot(1).set(chestplate.copy());
+        armorUp.getSlot(2).set(ingot.copy());
+        armorUp.createResult();
+        ItemStack upgraded = armorUp.getSlot(3).getItem();
+        ok &= report(!upgraded.isEmpty() && Soulbound.isInfused(upgraded)
+                        && upgraded.has(DataComponents.TRIM),
+                "smithing: upgrade template + armor infuses and stamps the enderium trim");
 
         // GUI slot gates: the real screen consults mayPlace before a recipe ever runs.
         SmithingMenu gui = new SmithingMenu(1, player.getInventory());

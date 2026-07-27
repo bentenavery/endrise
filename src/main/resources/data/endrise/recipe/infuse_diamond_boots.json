@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": "endrise:enderium_upgrade_smithing_template",
+  "base": "minecraft:diamond_boots",
+  "addition": "endrise:enderium_ingot",
+  "result": {
+    "id": "minecraft:diamond_boots",
+    "components": {
+      "endrise:enderium_infused": {},
+      "minecraft:trim": {
+        "material": "endrise:enderium",
+        "pattern": "minecraft:eye"
+      }
+    }
+  }
+}
