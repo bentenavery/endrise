@@ -7,14 +7,10 @@
     "item": "minecraft:netherite_shovel"
   },
   "addition": {
-    "item": "endrise:enderium_ingot"
+    "tag": "endrise:enderium_tool_materials"
   },
   "result": {
-    "id": "minecraft:netherite_shovel",
-    "components": {
-      "endrise:enderium_infused": {},
-      "minecraft:enchantment_glint_override": true
-    },
-    "count": 1
+    "count": 1,
+    "id": "endrise:enderium_shovel"
   }
 }

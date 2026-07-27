@@ -13,7 +13,6 @@ import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 @Mod(value = Endrise.MODID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = Endrise.MODID, value = Dist.CLIENT)
 public class EndriseClient {
-    private static final int ENDERIUM_TEAL = 0x2FC39D;
 
     @SubscribeEvent
     static void onClientSetup(FMLClientSetupEvent event) {
@@ -22,10 +21,6 @@ public class EndriseClient {
 
     @SubscribeEvent
     static void onItemTooltip(ItemTooltipEvent event) {
-        if (Soulbound.isInfused(event.getItemStack())) {
-            event.getToolTip().add(Component.translatable("tooltip.endrise.enderium_infused")
-                    .withStyle(style -> style.withColor(ENDERIUM_TEAL)));
-        }
         if (event.getItemStack().is(Endrise.ENDERIUM_UPGRADE_TEMPLATE.get())) {
             event.getToolTip().add(Component.translatable("tooltip.endrise.enderium_upgrade_template")
                     .withStyle(ChatFormatting.GRAY));
