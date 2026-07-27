@@ -1,5 +1,9 @@
 {
   "block.endrise.enderium_ore": "Enderium Ore",
   "item.endrise.raw_enderium": "Raw Enderium",
-  "item.endrise.enderium_ingot": "Enderium Ingot"
+  "item.endrise.enderium_ingot": "Enderium Ingot",
+  "item.endrise.enderium_upgrade_smithing_template": "Enderium Upgrade Smithing Template",
+  "enchantment.endrise.soulbound": "Soulbound",
+  "trim_material.endrise.enderium": "Enderium Material",
+  "tooltip.endrise.enderium_infused": "Enderium-Infused"
 }
