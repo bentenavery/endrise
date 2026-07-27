@@ -1,0 +1,33 @@
+{
+  "display": {
+    "title": {
+      "translate": "advancements.endrise.root.title"
+    },
+    "description": {
+      "translate": "advancements.endrise.root.description"
+    },
+    "icon": {
+      "id": "endrise:raw_enderium"
+    },
+    "background": "minecraft:gui/advancements/backgrounds/end",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "has_raw_enderium": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "endrise:raw_enderium"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_raw_enderium"
+    ]
+  ]
+}

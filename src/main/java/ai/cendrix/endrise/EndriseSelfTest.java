@@ -4,6 +4,10 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.AnvilMenu;
@@ -40,11 +44,146 @@ public final class EndriseSelfTest {
         MinecraftServer server = event.getServer();
         Player player = FakePlayerFactory.getMinecraft(server.overworld());
 
-        boolean ok = runSmithingChecks(server, player);
-        ok &= runAnvilChecks(server, player);
-        ok &= runCreativeTabCheck(server);
-        Endrise.LOGGER.info("[SELFTEST] {}", ok ? "ALL PASS" : "FAILURES PRESENT");
-        server.halt(false);
+        immediateOk = runSmithingChecks(server, player);
+        immediateOk &= runAnvilChecks(server, player);
+        immediateOk &= runCreativeTabCheck(server);
+        // Void checks need real server ticks: fresh entities only reach the queryable
+        // index once the entity manager processes its pending queue, and the scan
+        // itself runs on a tick cadence. Armed here, asserted in onTick.
+        armedAt = server.overworld().getGameTime();
+    }
+
+    private static boolean immediateOk;
+    private static long armedAt = -1;
+    private static boolean voidOk = true;
+    private static ItemEntity tossed;
+    private static ItemEntity diamond;
+    private static ItemEntity deathDrop;
+    private static ItemEntity expiring;
+
+    @SubscribeEvent
+    static void onTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+        if (armedAt < 0) {
+            return;
+        }
+        MinecraftServer server = event.getServer();
+        ServerLevel level = server.overworld();
+        long t = level.getGameTime() - armedAt;
+        Player player = FakePlayerFactory.getMinecraft(level);
+
+        if (t == 2) {
+            var spawn = level.getRespawnData().pos();
+            // Drops are spaced out: same-owner enderium stacks merge by design,
+            // and merged test subjects made the 1.21.1 suite miscount captures
+            player.setPos(spawn.getX() + 0.5, 80, spawn.getZ() + 0.5);
+            tossed = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get(), 2), false);
+            player.setPos(spawn.getX() + 6.5, 80, spawn.getZ() + 0.5);
+            diamond = player.drop(new ItemStack(Items.DIAMOND_PICKAXE), false);
+            player.setPos(spawn.getX() + 12.5, 80, spawn.getZ() + 0.5);
+            deathDrop = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
+            net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA,
+                    deathDrop.getItem(), tag -> {
+                        tag.putBoolean(VoidReturn.TAG_DEATH_DROP, true);
+                        tag.remove(VoidReturn.TAG_OWNER);
+                    });
+            player.setPos(spawn.getX() + 18.5, 80, spawn.getZ() + 0.5);
+            expiring = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
+        } else if (t == 6) {
+            var stampData = tossed == null ? null : tossed.getItem().get(DataComponents.CUSTOM_DATA);
+            voidOk &= report(stampData != null
+                            && !stampData.copyTag().getStringOr(VoidReturn.TAG_OWNER, "").isEmpty(),
+                    "void: player toss stamps the dropper UUID into the stack");
+            var indexed = level.getEntities(net.minecraft.world.entity.EntityType.ITEM, e -> true);
+            Endrise.LOGGER.info("[SELFTEST-DBG] indexed items after ticks: {} (expect 4)", indexed.size());
+            tossed.setPos(tossed.getX(), level.getMinY() - 10, tossed.getZ());
+            diamond.setPos(diamond.getX(), level.getMinY() - 10, diamond.getZ());
+            deathDrop.setPos(deathDrop.getX(), level.getMinY() - 10, deathDrop.getZ());
+            expiring.lifespan = 1;
+            expiring.tick();
+            expiring.tick();
+        } else if (t == 30) {
+            armedAt = -1;
+            SoulboundStore store = SoulboundStore.get(server);
+            long farFuture = level.getGameTime() + 10_000;
+            var captured = store.takeReady(player.getUUID(), farFuture);
+            Endrise.LOGGER.info("[SELFTEST-DBG] captured={} tossed[rm={} why={}] diamond[rm={} why={}] death[rm={} why={}] expiring[rm={} why={}]",
+                    captured.size(),
+                    tossed.isRemoved(), tossed.getRemovalReason(),
+                    diamond.isRemoved(), diamond.getRemovalReason(),
+                    deathDrop.isRemoved(), deathDrop.getRemovalReason(),
+                    expiring.isRemoved(), expiring.getRemovalReason());
+            // expiring was captured at t=6, tossed by the natural scan; order not guaranteed
+            voidOk &= report(captured.size() == 2
+                            && captured.stream().allMatch(p -> p.slot() == VoidReturn.SLOT_ANY)
+                            && captured.stream().allMatch(p -> p.stack().is(Endrise.ENDERIUM_INGOT.get())),
+                    "void: natural scan + expire hook captured exactly the two enderium drops");
+            voidOk &= report(tossed.isRemoved() && expiring.isRemoved(),
+                    "void: captured entities were discarded");
+            // "Not captured" means we never discarded it into the store; on this empty
+            // test server uncaptured entities get archived as UNLOADED_TO_CHUNK, which
+            // is vanilla bookkeeping, not a capture.
+            voidOk &= report(diamond.getRemovalReason() != net.minecraft.world.entity.Entity.RemovalReason.DISCARDED,
+                    "void: non-enderium items are not captured");
+            voidOk &= report(deathDrop.getRemovalReason() != net.minecraft.world.entity.Entity.RemovalReason.DISCARDED,
+                    "void: death-flagged drops are left for Soulbound");
+
+            if (captured.size() == 2) {
+                int before = player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get());
+                SoulboundEvents.deliver((ServerPlayer) player, captured.get(0));
+                SoulboundEvents.deliver((ServerPlayer) player, captured.get(1));
+                voidOk &= report(player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get()) == before + 3,
+                        "void: delivery hands the rescued stacks back");
+            }
+
+            player.setItemSlot(EquipmentSlot.FEET, new ItemStack(Endrise.ENDERIUM_BOOTS.get()));
+            boolean withBoots = VoidReturn.negatesPearl(player);
+            player.setItemSlot(EquipmentSlot.FEET, ItemStack.EMPTY);
+            voidOk &= report(withBoots && !VoidReturn.negatesPearl(player),
+                    "pearl: negation requires an enderium armor piece");
+
+            // Marked and clean stacks must never merge (marker laundering regression)
+            ItemStack marked = new ItemStack(Endrise.ENDERIUM_INGOT.get());
+            net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA,
+                    marked, tag -> tag.putString(VoidReturn.TAG_OWNER, player.getStringUUID()));
+            voidOk &= report(!ItemStack.isSameItemSameComponents(marked, new ItemStack(Endrise.ENDERIUM_INGOT.get())),
+                    "void: marked stacks refuse to merge with clean ones");
+
+            // Toss below the kill plane is captured synchronously (panic-drop regression)
+            player.setPos(player.getX(), level.getMinY() - 70, player.getZ());
+            ItemEntity deepToss = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
+            player.setPos(player.getX(), 80, player.getZ());
+            var deepCaptured = store.takeReady(player.getUUID(), farFuture);
+            voidOk &= report(deepToss != null && deepToss.getItem().isEmpty() && deepCaptured.size() == 1,
+                    "void: toss below the kill plane is captured at toss time");
+
+            // Delivery waits out the death screen (respawn-wipe regression)
+            int baseline = player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get());
+            store.add(player.getUUID(), new SoulboundStore.Pending(VoidReturn.SLOT_ANY,
+                    new ItemStack(Endrise.ENDERIUM_INGOT.get()), level.getGameTime()));
+            player.setHealth(0.0F);
+            boolean heldWhileDead = !SoulboundEvents.deliverPendingFor(store, (ServerPlayer) player, farFuture);
+            player.setHealth(20.0F);
+            boolean deliveredAfter = SoulboundEvents.deliverPendingFor(store, (ServerPlayer) player, farFuture);
+            voidOk &= report(heldWhileDead && deliveredAfter
+                            && player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get()) == baseline + 1,
+                    "void: delivery waits out the death screen, lands after revival");
+
+            // The store codec must round-trip a pending entry (save-crash regression)
+            SoulboundStore probe = new SoulboundStore();
+            probe.add(player.getUUID(), new SoulboundStore.Pending(3,
+                    new ItemStack(Endrise.ENDERIUM_INGOT.get()), 42L));
+            var ops = net.minecraft.resources.RegistryOps.create(
+                    net.minecraft.nbt.NbtOps.INSTANCE, server.registryAccess());
+            var encoded = SoulboundStore.CODEC.encodeStart(ops, probe).result();
+            boolean roundTrips = encoded.isPresent()
+                    && SoulboundStore.CODEC.parse(ops, encoded.get()).result()
+                            .map(s -> s.takeReady(player.getUUID(), 100L).size() == 1).orElse(false);
+            voidOk &= report(roundTrips, "store: codec round-trips a pending entry (save-crash regression)");
+
+            boolean ok = immediateOk && voidOk;
+            Endrise.LOGGER.info("[SELFTEST] {}", ok ? "ALL PASS" : "FAILURES PRESENT");
+            server.halt(false);
+        }
     }
 
     private static boolean runSmithingChecks(MinecraftServer server, Player player) {
