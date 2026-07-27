@@ -13,7 +13,7 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.GameRules;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.AnvilUpdateEvent;
@@ -39,7 +39,7 @@ public final class SoulboundEvents {
             return;
         }
         ServerLevel level = (ServerLevel) player.level();
-        if (level.getGameRules().get(GameRules.KEEP_INVENTORY)) {
+        if (level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
             return; // vanilla already keeps everything
         }
         var registries = level.registryAccess();

@@ -6,13 +6,14 @@ import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.armortrim.TrimMaterial;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -37,14 +38,15 @@ public class Endrise {
     public static final DeferredRegister.DataComponents DATA_COMPONENTS =
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, MODID);
 
-    // The enderium armor trim material (data-defined in data/endrise/trim_material/enderium.json)
+    // The enderium armor trim material. On 1.21.1 the ingot<->material link is the
+    // "ingredient" field in data/endrise/trim_material/enderium.json (no item component here).
     public static final ResourceKey<TrimMaterial> ENDERIUM_TRIM =
             ResourceKey.create(Registries.TRIM_MATERIAL, id("enderium"));
 
     // Marker set by the smithing infusion recipes; presence = "this tool is enderium-infused"
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Unit>> ENDERIUM_INFUSED =
             DATA_COMPONENTS.registerComponentType("enderium_infused",
-                    b -> b.persistent(Unit.CODEC).networkSynchronized(Unit.STREAM_CODEC));
+                    b -> b.persistent(Unit.CODEC).networkSynchronized(StreamCodec.unit(Unit.INSTANCE)));
 
     // Enderium: the End's buried metal. Ore sits in end stone, drops raw enderium, smelts to ingots.
     // Where it spawns is data, not code: data/endrise/worldgen/* defines the veins,
@@ -59,9 +61,7 @@ public class Endrise {
     public static final DeferredItem<BlockItem> ENDERIUM_ORE_ITEM = ITEMS.registerSimpleBlockItem("enderium_ore", ENDERIUM_ORE);
 
     public static final DeferredItem<Item> RAW_ENDERIUM = ITEMS.registerSimpleItem("raw_enderium");
-    // The ingot doubles as an armor trim material at the smithing table
-    public static final DeferredItem<Item> ENDERIUM_INGOT = ITEMS.registerSimpleItem("enderium_ingot",
-            p -> p.trimMaterial(ENDERIUM_TRIM));
+    public static final DeferredItem<Item> ENDERIUM_INGOT = ITEMS.registerSimpleItem("enderium_ingot");
     public static final DeferredItem<Item> ENDERIUM_UPGRADE_TEMPLATE =
             ITEMS.registerSimpleItem("enderium_upgrade_smithing_template");
 
@@ -75,8 +75,8 @@ public class Endrise {
         modEventBus.addListener(this::addCreative);
     }
 
-    public static Identifier id(String path) {
-        return Identifier.fromNamespaceAndPath(MODID, path);
+    public static ResourceLocation id(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MODID, path);
     }
 
     private void commonSetup(FMLCommonSetupEvent event) {

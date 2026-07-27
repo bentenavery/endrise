@@ -1,12 +1,19 @@
 {
   "type": "minecraft:smithing_transform",
-  "template": "endrise:enderium_upgrade_smithing_template",
-  "base": "minecraft:diamond_pickaxe",
-  "addition": "endrise:enderium_ingot",
+  "template": {
+    "item": "endrise:enderium_upgrade_smithing_template"
+  },
+  "base": {
+    "item": "minecraft:diamond_pickaxe"
+  },
+  "addition": {
+    "item": "endrise:enderium_ingot"
+  },
   "result": {
     "id": "minecraft:diamond_pickaxe",
     "components": {
       "endrise:enderium_infused": {}
-    }
+    },
+    "count": 1
   }
 }

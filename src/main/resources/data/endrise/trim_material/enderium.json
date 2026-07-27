@@ -3,5 +3,7 @@
   "description": {
     "color": "#2FC39D",
     "translate": "trim_material.endrise.enderium"
-  }
+  },
+  "ingredient": "endrise:enderium_ingot",
+  "item_model_index": 0.85
 }

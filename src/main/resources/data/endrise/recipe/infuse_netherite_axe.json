@@ -1,12 +1,19 @@
 {
   "type": "minecraft:smithing_transform",
-  "template": "endrise:enderium_upgrade_smithing_template",
-  "base": "minecraft:netherite_axe",
-  "addition": "endrise:enderium_ingot",
+  "template": {
+    "item": "endrise:enderium_upgrade_smithing_template"
+  },
+  "base": {
+    "item": "minecraft:netherite_axe"
+  },
+  "addition": {
+    "item": "endrise:enderium_ingot"
+  },
   "result": {
     "id": "minecraft:netherite_axe",
     "components": {
       "endrise:enderium_infused": {}
-    }
+    },
+    "count": 1
   }
 }

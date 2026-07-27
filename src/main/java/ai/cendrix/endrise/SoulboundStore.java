@@ -6,18 +6,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
-
-import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraft.world.level.saveddata.SavedDataType;
 
 /**
  * World-saved store of soulbound gear waiting to return to its owner.
  * Persisted so a server restart mid-return cannot eat anyone's tools.
+ * 1.21.1 branch: NBT-based SavedData (the codec-based SavedDataType is a newer-version API).
  */
 public class SoulboundStore extends SavedData {
 
@@ -25,33 +25,60 @@ public class SoulboundStore extends SavedData {
      * One captured stack. {@code slot}: 0..35 = main inventory index;
      * negative = -(1 + EquipmentSlot ordinal) for armor/offhand.
      */
-    public record Pending(int slot, ItemStack stack, long readyAt) {
-        public static final Codec<Pending> CODEC = RecordCodecBuilder.create(i -> i.group(
-                Codec.INT.fieldOf("slot").forGetter(Pending::slot),
-                ItemStack.CODEC.fieldOf("stack").forGetter(Pending::stack),
-                Codec.LONG.fieldOf("ready_at").forGetter(Pending::readyAt)
-        ).apply(i, Pending::new));
-    }
+    public record Pending(int slot, ItemStack stack, long readyAt) {}
 
     private final Map<UUID, List<Pending>> pending = new HashMap<>();
 
-    public static final Codec<SoulboundStore> CODEC =
-            Codec.unboundedMap(UUIDUtil.CODEC, Pending.CODEC.listOf())
-                    .xmap(SoulboundStore::fromMap, store -> Map.copyOf(store.pending));
-
-    public static final SavedDataType<SoulboundStore> TYPE =
-            new SavedDataType<>(Endrise.id("soulbound"), SoulboundStore::new, CODEC);
+    public static final SavedData.Factory<SoulboundStore> FACTORY =
+            new SavedData.Factory<>(SoulboundStore::new, SoulboundStore::load);
 
     public SoulboundStore() {}
 
-    private static SoulboundStore fromMap(Map<UUID, List<Pending>> saved) {
-        SoulboundStore store = new SoulboundStore();
-        saved.forEach((owner, entries) -> store.pending.put(owner, new ArrayList<>(entries)));
-        return store;
+    public static SoulboundStore get(MinecraftServer server) {
+        return server.overworld().getDataStorage().computeIfAbsent(FACTORY, "endrise_soulbound");
     }
 
-    public static SoulboundStore get(MinecraftServer server) {
-        return server.overworld().getDataStorage().computeIfAbsent(TYPE);
+    @Override
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
+        ListTag owners = new ListTag();
+        this.pending.forEach((owner, entries) -> {
+            CompoundTag ownerTag = new CompoundTag();
+            ownerTag.putUUID("owner", owner);
+            ListTag list = new ListTag();
+            for (Pending entry : entries) {
+                CompoundTag entryTag = new CompoundTag();
+                entryTag.putInt("slot", entry.slot());
+                entryTag.putLong("ready_at", entry.readyAt());
+                entryTag.put("stack", entry.stack().save(registries));
+                list.add(entryTag);
+            }
+            ownerTag.put("entries", list);
+            owners.add(ownerTag);
+        });
+        tag.put("pending", owners);
+        return tag;
+    }
+
+    private static SoulboundStore load(CompoundTag tag, HolderLookup.Provider registries) {
+        SoulboundStore store = new SoulboundStore();
+        ListTag owners = tag.getList("pending", Tag.TAG_COMPOUND);
+        for (int i = 0; i < owners.size(); i++) {
+            CompoundTag ownerTag = owners.getCompound(i);
+            UUID owner = ownerTag.getUUID("owner");
+            ListTag list = ownerTag.getList("entries", Tag.TAG_COMPOUND);
+            List<Pending> entries = new ArrayList<>();
+            for (int j = 0; j < list.size(); j++) {
+                CompoundTag entryTag = list.getCompound(j);
+                int slot = entryTag.getInt("slot");
+                long readyAt = entryTag.getLong("ready_at");
+                ItemStack.parse(registries, entryTag.getCompound("stack"))
+                        .ifPresent(stack -> entries.add(new Pending(slot, stack, readyAt)));
+            }
+            if (!entries.isEmpty()) {
+                store.pending.put(owner, entries);
+            }
+        }
+        return store;
     }
 
     public void add(UUID owner, Pending entry) {
