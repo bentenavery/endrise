@@ -73,15 +73,20 @@ public final class EndriseSelfTest {
 
         if (t == 2) {
             var spawn = level.getRespawnData().pos();
+            // Drops are spaced out: same-owner enderium stacks merge by design,
+            // and merged test subjects made the 1.21.1 suite miscount captures
             player.setPos(spawn.getX() + 0.5, 80, spawn.getZ() + 0.5);
             tossed = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get(), 2), false);
+            player.setPos(spawn.getX() + 6.5, 80, spawn.getZ() + 0.5);
             diamond = player.drop(new ItemStack(Items.DIAMOND_PICKAXE), false);
+            player.setPos(spawn.getX() + 12.5, 80, spawn.getZ() + 0.5);
             deathDrop = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
             net.minecraft.world.item.component.CustomData.update(DataComponents.CUSTOM_DATA,
                     deathDrop.getItem(), tag -> {
                         tag.putBoolean(VoidReturn.TAG_DEATH_DROP, true);
                         tag.remove(VoidReturn.TAG_OWNER);
                     });
+            player.setPos(spawn.getX() + 18.5, 80, spawn.getZ() + 0.5);
             expiring = player.drop(new ItemStack(Endrise.ENDERIUM_INGOT.get()), false);
         } else if (t == 6) {
             var stampData = tossed == null ? null : tossed.getItem().get(DataComponents.CUSTOM_DATA);
