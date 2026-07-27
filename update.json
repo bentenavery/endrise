@@ -1,0 +1,21 @@
+{
+  "homepage": "https://github.com/bentenavery/endrise/releases",
+  "promos": {
+    "26.1.2-latest": "0.3.0",
+    "26.1.2-recommended": "0.3.0",
+    "1.21.1-latest": "0.3.0",
+    "1.21.1-recommended": "0.3.0"
+  },
+  "26.1.2": {
+    "0.2.1": "Fix: the anvil no longer lets a soulbound tool sacrifice smuggle Soulbound onto non-infused gear.",
+    "0.2.0": "Enderium infusion + Soulbound: gear that comes back from death.",
+    "0.1.0": "Enderium ore, raw enderium, ingots, End worldgen.",
+    "0.3.0": "The Enderium Tier: enderium gear is now real items above netherite; upgrade netherite gear at the smithing table. Soulbound is enderium-exclusive (0.2.x infusion markers and trims no longer qualify)."
+  },
+  "1.21.1": {
+    "0.2.1": "Fix: the anvil no longer lets a soulbound tool sacrifice smuggle Soulbound onto non-infused gear.",
+    "0.2.0": "Enderium infusion + Soulbound: gear that comes back from death.",
+    "0.1.0": "Enderium ore, raw enderium, ingots, End worldgen.",
+    "0.3.0": "The Enderium Tier: enderium gear is now real items above netherite; upgrade netherite gear at the smithing table. Soulbound is enderium-exclusive (0.2.x infusion markers and trims no longer qualify)."
+  }
+}

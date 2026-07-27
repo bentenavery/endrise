@@ -19,6 +19,16 @@ public class EndriseClient {
         Endrise.LOGGER.info("Endrise client ready");
     }
 
+    private static final int ENDERIUM_TEAL = 0x2FC39D;
+
+    @SubscribeEvent
+    static void onVoidTooltip(ItemTooltipEvent event) {
+        if (event.getItemStack().is(VoidReturn.VOID_RETURNING)) {
+            event.getToolTip().add(Component.translatable("tooltip.endrise.void_returning")
+                    .withStyle(style -> style.withColor(ENDERIUM_TEAL)));
+        }
+    }
+
     @SubscribeEvent
     static void onItemTooltip(ItemTooltipEvent event) {
         if (event.getItemStack().is(Endrise.ENDERIUM_UPGRADE_TEMPLATE.get())) {

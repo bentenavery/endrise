@@ -1,0 +1,63 @@
+name: Publish
+# Publishes release jars to Modrinth (and CurseForge once its token/id exist).
+# Fires on every GitHub release; use workflow_dispatch with a tag to backfill one.
+# Needs: repo variable MODRINTH_ID (project slug/id) + secret MODRINTH_TOKEN.
+# Optional: CURSEFORGE_ID variable + CURSEFORGE_TOKEN secret enable CurseForge too.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to publish (e.g. v0.2.1)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    if: vars.MODRINTH_ID != '' || vars.CURSEFORGE_ID != ''
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - mc: "26.1.2"
+            pattern: "endrise-26.1.2-*.jar"
+          - mc: "1.21.1"
+            pattern: "endrise-1.21.1-*.jar"
+    steps:
+      - name: Resolve tag and changelog
+        id: rel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "ver=${TAG#v}" >> "$GITHUB_OUTPUT"
+          {
+            echo "body<<CHANGELOG_EOF"
+            gh release view "$TAG" --repo "${{ github.repository }}" --json body -q .body
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Download release jar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "${{ steps.rel.outputs.tag }}" --repo "${{ github.repository }}" --pattern "${{ matrix.pattern }}" --dir dist
+
+      - name: Publish MC ${{ matrix.mc }}
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ vars.MODRINTH_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ vars.CURSEFORGE_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: dist/*.jar
+          name: "Endrise ${{ steps.rel.outputs.ver }} for MC ${{ matrix.mc }}"
+          version: "${{ matrix.mc }}-${{ steps.rel.outputs.ver }}"
+          version-type: alpha
+          loaders: neoforge
+          game-versions: ${{ matrix.mc }}
+          changelog: ${{ steps.rel.outputs.body }}

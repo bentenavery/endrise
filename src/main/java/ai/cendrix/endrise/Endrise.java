@@ -74,10 +74,13 @@ public class Endrise {
                     .sound(SoundType.STONE));
     public static final DeferredItem<BlockItem> ENDERIUM_ORE_ITEM = ITEMS.registerSimpleBlockItem("enderium_ore", ENDERIUM_ORE);
 
-    public static final DeferredItem<Item> RAW_ENDERIUM = ITEMS.registerSimpleItem("raw_enderium");
-    public static final DeferredItem<Item> ENDERIUM_INGOT = ITEMS.registerSimpleItem("enderium_ingot");
+    // Materials float in lava and shrug off fire, netherite-style (Tide 4)
+    public static final DeferredItem<Item> RAW_ENDERIUM = ITEMS.registerSimpleItem("raw_enderium",
+            new Item.Properties().fireResistant());
+    public static final DeferredItem<Item> ENDERIUM_INGOT = ITEMS.registerSimpleItem("enderium_ingot",
+            new Item.Properties().fireResistant());
     public static final DeferredItem<Item> ENDERIUM_UPGRADE_TEMPLATE =
-            ITEMS.registerSimpleItem("enderium_upgrade_smithing_template");
+            ITEMS.registerSimpleItem("enderium_upgrade_smithing_template", new Item.Properties().fireResistant());
 
     // ---- Enderium gear: the tier above netherite (v0.3). Netherite gear + the
     // upgrade template + an enderium ingot transmutes at the smithing table. ----

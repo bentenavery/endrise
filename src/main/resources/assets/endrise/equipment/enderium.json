@@ -1,0 +1,19 @@
+{
+  "layers": {
+    "humanoid": [
+      {
+        "texture": "endrise:enderium"
+      }
+    ],
+    "humanoid_baby": [
+      {
+        "texture": "endrise:enderium"
+      }
+    ],
+    "humanoid_leggings": [
+      {
+        "texture": "endrise:enderium"
+      }
+    ]
+  }
+}
