@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "E": "endrise:enderium_ingot",
+    "P": "minecraft:ender_pearl",
+    "B": "minecraft:book"
+  },
+  "pattern": [
+    "EEE",
+    "PBP"
+  ],
+  "result": {
+    "count": 1,
+    "id": "minecraft:enchanted_book",
+    "components": {
+      "minecraft:stored_enchantments": {
+        "endrise:soulbound": 1
+      }
+    }
+  }
+}

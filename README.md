@@ -21,6 +21,15 @@ No public release yet. Build from source:
 
 The jar lands in `build/libs/` and goes in the `mods/` folder of any NeoForge 26.1.2 instance.
 
+## Versions
+
+| Branch | Minecraft | NeoForge |
+|---|---|---|
+| `main` (dev tip) | 26.1.2 | 26.1.2.87+ |
+| `1.21.1` | 1.21.1 | 21.1.244+ |
+
+New content lands on `main` first, then gets ported. Releases ship one jar per supported version.
+
 ## Contributing
 
 Endrise is open to contributors. The plan lives in [ROADMAP.md](ROADMAP.md), the how lives in [CONTRIBUTING.md](CONTRIBUTING.md), and the dev loop is one command:

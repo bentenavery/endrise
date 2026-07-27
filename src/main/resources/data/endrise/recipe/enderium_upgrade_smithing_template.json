@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "S": "minecraft:end_stone",
+    "C": "minecraft:popped_chorus_fruit",
+    "E": "endrise:enderium_ingot"
+  },
+  "pattern": [
+    "SES",
+    "SCS",
+    "SSS"
+  ],
+  "result": {
+    "count": 1,
+    "id": "endrise:enderium_upgrade_smithing_template"
+  }
+}

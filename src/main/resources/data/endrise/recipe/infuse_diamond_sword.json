@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smithing_transform",
+  "template": "endrise:enderium_upgrade_smithing_template",
+  "base": "minecraft:diamond_sword",
+  "addition": "endrise:enderium_ingot",
+  "result": {
+    "id": "minecraft:diamond_sword",
+    "components": {
+      "endrise:enderium_infused": {}
+    }
+  }
+}
