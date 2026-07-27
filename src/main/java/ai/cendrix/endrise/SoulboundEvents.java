@@ -86,7 +86,13 @@ public final class SoulboundEvents {
         }
     }
 
-    private static void deliver(ServerPlayer player, SoulboundStore.Pending entry) {
+    static void deliver(ServerPlayer player, SoulboundStore.Pending entry) {
+        if (entry.slot() == VoidReturn.SLOT_ANY) {
+            // Void/despawn rescue: no home slot to restore
+            giveOrDrop(player, entry.stack());
+            VoidReturn.awardNothingIsLost(player);
+            return;
+        }
         if (entry.slot() >= 0) {
             if (player.getInventory().getItem(entry.slot()).isEmpty()) {
                 player.getInventory().setItem(entry.slot(), entry.stack());
@@ -100,8 +106,12 @@ public final class SoulboundEvents {
             }
         }
         // Original spot is occupied: any free slot beats dropping it on the floor
-        if (!player.getInventory().add(entry.stack())) {
-            player.drop(entry.stack(), false);
+        giveOrDrop(player, entry.stack());
+    }
+
+    private static void giveOrDrop(ServerPlayer player, ItemStack stack) {
+        if (!player.getInventory().add(stack)) {
+            player.drop(stack, false);
         }
     }
 
