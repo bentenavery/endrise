@@ -5,8 +5,10 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.item.equipment.trim.ArmorTrim;
 
 /**
@@ -41,5 +43,15 @@ public final class Soulbound {
     /** True when this stack should skip death drops and return to its owner. */
     public static boolean protects(HolderLookup.Provider registries, ItemStack stack) {
         return !stack.isEmpty() && isInfused(stack) && isSoulbound(registries, stack);
+    }
+
+    /** The craftable Soulbound book (as it appears in the creative tab). */
+    public static ItemStack book(HolderLookup.Provider registries) {
+        var soulbound = registries.lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(KEY);
+        ItemStack book = new ItemStack(Items.ENCHANTED_BOOK);
+        ItemEnchantments.Mutable stored = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+        stored.set(soulbound, 1);
+        book.set(DataComponents.STORED_ENCHANTMENTS, stored.toImmutable());
+        return book;
     }
 }
