@@ -52,6 +52,13 @@ neoForge {
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+
+            // Run as your real profile so your skin loads (public lookup, no login).
+            // Set devUuid/devUsername in ~/.gradle/gradle.properties; absent = vanilla "Dev".
+            if (project.hasProperty('devUuid')) {
+                programArguments.addAll '--uuid', project.devUuid,
+                        '--username', project.findProperty('devUsername') ?: 'Dev'
+            }
         }
 
         server {
