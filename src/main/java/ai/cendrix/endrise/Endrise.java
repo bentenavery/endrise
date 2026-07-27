@@ -4,18 +4,30 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import java.util.Map;
+
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.util.Unit;
+import net.minecraft.world.item.AxeItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
+import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.ShovelItem;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorType;
+import net.minecraft.world.item.equipment.EquipmentAsset;
+import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
@@ -39,11 +51,8 @@ public class Endrise {
     public static final DeferredRegister.DataComponents DATA_COMPONENTS =
             DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, MODID);
 
-    // The enderium armor trim material (data-defined in data/endrise/trim_material/enderium.json)
-    public static final ResourceKey<TrimMaterial> ENDERIUM_TRIM =
-            ResourceKey.create(Registries.TRIM_MATERIAL, id("enderium"));
-
-    // Marker set by the smithing infusion recipes; presence = "this tool is enderium-infused"
+    // Legacy 0.2.x infusion marker. Kept registered so items from old worlds still
+    // parse; carries no behavior since the v0.3 first-class gear redesign.
     public static final DeferredHolder<DataComponentType<?>, DataComponentType<Unit>> ENDERIUM_INFUSED =
             DATA_COMPONENTS.registerComponentType("enderium_infused",
                     b -> b.persistent(Unit.CODEC).networkSynchronized(Unit.STREAM_CODEC));
@@ -59,11 +68,52 @@ public class Endrise {
     public static final DeferredItem<BlockItem> ENDERIUM_ORE_ITEM = ITEMS.registerSimpleBlockItem("enderium_ore", ENDERIUM_ORE);
 
     public static final DeferredItem<Item> RAW_ENDERIUM = ITEMS.registerSimpleItem("raw_enderium");
-    // The ingot doubles as an armor trim material at the smithing table
-    public static final DeferredItem<Item> ENDERIUM_INGOT = ITEMS.registerSimpleItem("enderium_ingot",
-            p -> p.trimMaterial(ENDERIUM_TRIM));
+    public static final DeferredItem<Item> ENDERIUM_INGOT = ITEMS.registerSimpleItem("enderium_ingot");
     public static final DeferredItem<Item> ENDERIUM_UPGRADE_TEMPLATE =
             ITEMS.registerSimpleItem("enderium_upgrade_smithing_template");
+
+    // ---- Enderium gear: the tier above netherite (v0.3). Netherite gear + the
+    // upgrade template + an enderium ingot transmutes at the smithing table. ----
+    public static final TagKey<Item> ENDERIUM_TOOL_MATERIALS =
+            TagKey.create(Registries.ITEM, id("enderium_tool_materials"));
+    public static final TagKey<Item> REPAIRS_ENDERIUM_ARMOR =
+            TagKey.create(Registries.ITEM, id("repairs_enderium_armor"));
+    /** The gear the End gives back: exactly the enderium items. */
+    public static final TagKey<Item> SOULBOUND_ABLE =
+            TagKey.create(Registries.ITEM, id("soulbound_able"));
+
+    public static final ToolMaterial ENDERIUM_TOOL_MATERIAL = new ToolMaterial(
+            BlockTags.INCORRECT_FOR_NETHERITE_TOOL, 2531, 10.0F, 5.0F, 17, ENDERIUM_TOOL_MATERIALS);
+
+    public static final ResourceKey<EquipmentAsset> ENDERIUM_EQUIPMENT_ASSET =
+            ResourceKey.create(EquipmentAssets.ROOT_ID, id("enderium"));
+    public static final ArmorMaterial ENDERIUM_ARMOR_MATERIAL = new ArmorMaterial(
+            41,
+            Map.of(ArmorType.BOOTS, 3, ArmorType.LEGGINGS, 6, ArmorType.CHESTPLATE, 8,
+                    ArmorType.HELMET, 3, ArmorType.BODY, 19),
+            17, SoundEvents.ARMOR_EQUIP_NETHERITE, 3.5F, 0.15F,
+            REPAIRS_ENDERIUM_ARMOR, ENDERIUM_EQUIPMENT_ASSET);
+
+    // Baselines copied from vanilla netherite (Items.java); the material carries the tier.
+    public static final DeferredItem<Item> ENDERIUM_SWORD = ITEMS.registerSimpleItem("enderium_sword",
+            p -> p.sword(ENDERIUM_TOOL_MATERIAL, 3.0F, -2.4F).fireResistant());
+    public static final DeferredItem<Item> ENDERIUM_PICKAXE = ITEMS.registerSimpleItem("enderium_pickaxe",
+            p -> p.pickaxe(ENDERIUM_TOOL_MATERIAL, 1.0F, -2.8F).fireResistant());
+    public static final DeferredItem<AxeItem> ENDERIUM_AXE = ITEMS.registerItem("enderium_axe",
+            p -> new AxeItem(ENDERIUM_TOOL_MATERIAL, 5.0F, -3.0F, p.fireResistant()));
+    public static final DeferredItem<ShovelItem> ENDERIUM_SHOVEL = ITEMS.registerItem("enderium_shovel",
+            p -> new ShovelItem(ENDERIUM_TOOL_MATERIAL, 1.5F, -3.0F, p.fireResistant()));
+    public static final DeferredItem<HoeItem> ENDERIUM_HOE = ITEMS.registerItem("enderium_hoe",
+            p -> new HoeItem(ENDERIUM_TOOL_MATERIAL, -4.0F, 0.0F, p.fireResistant()));
+
+    public static final DeferredItem<Item> ENDERIUM_HELMET = ITEMS.registerSimpleItem("enderium_helmet",
+            p -> p.humanoidArmor(ENDERIUM_ARMOR_MATERIAL, ArmorType.HELMET).fireResistant());
+    public static final DeferredItem<Item> ENDERIUM_CHESTPLATE = ITEMS.registerSimpleItem("enderium_chestplate",
+            p -> p.humanoidArmor(ENDERIUM_ARMOR_MATERIAL, ArmorType.CHESTPLATE).fireResistant());
+    public static final DeferredItem<Item> ENDERIUM_LEGGINGS = ITEMS.registerSimpleItem("enderium_leggings",
+            p -> p.humanoidArmor(ENDERIUM_ARMOR_MATERIAL, ArmorType.LEGGINGS).fireResistant());
+    public static final DeferredItem<Item> ENDERIUM_BOOTS = ITEMS.registerSimpleItem("enderium_boots",
+            p -> p.humanoidArmor(ENDERIUM_ARMOR_MATERIAL, ArmorType.BOOTS).fireResistant());
 
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
@@ -78,6 +128,15 @@ public class Endrise {
                         output.accept(RAW_ENDERIUM.get());
                         output.accept(ENDERIUM_INGOT.get());
                         output.accept(ENDERIUM_UPGRADE_TEMPLATE.get());
+                        output.accept(ENDERIUM_SWORD.get());
+                        output.accept(ENDERIUM_PICKAXE.get());
+                        output.accept(ENDERIUM_AXE.get());
+                        output.accept(ENDERIUM_SHOVEL.get());
+                        output.accept(ENDERIUM_HOE.get());
+                        output.accept(ENDERIUM_HELMET.get());
+                        output.accept(ENDERIUM_CHESTPLATE.get());
+                        output.accept(ENDERIUM_LEGGINGS.get());
+                        output.accept(ENDERIUM_BOOTS.get());
                         output.accept(Soulbound.book(params.holders()));
                     })
                     .build());
@@ -109,6 +168,19 @@ public class Endrise {
             event.accept(RAW_ENDERIUM);
             event.accept(ENDERIUM_INGOT);
             event.accept(ENDERIUM_UPGRADE_TEMPLATE);
+        }
+        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(ENDERIUM_PICKAXE);
+            event.accept(ENDERIUM_AXE);
+            event.accept(ENDERIUM_SHOVEL);
+            event.accept(ENDERIUM_HOE);
+        }
+        if (event.getTabKey() == CreativeModeTabs.COMBAT) {
+            event.accept(ENDERIUM_SWORD);
+            event.accept(ENDERIUM_HELMET);
+            event.accept(ENDERIUM_CHESTPLATE);
+            event.accept(ENDERIUM_LEGGINGS);
+            event.accept(ENDERIUM_BOOTS);
         }
     }
 }

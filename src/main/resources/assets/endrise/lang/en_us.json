@@ -6,6 +6,14 @@
   "item.endrise.enderium_upgrade_smithing_template": "Enderium Upgrade Smithing Template",
   "enchantment.endrise.soulbound": "Soulbound",
   "trim_material.endrise.enderium": "Enderium Material",
-  "tooltip.endrise.enderium_infused": "Enderium-Infused",
-  "tooltip.endrise.enderium_upgrade_template": "Infuses tools and armor at the smithing table. An enderium armor trim counts as infused too."
+  "tooltip.endrise.enderium_upgrade_template": "Upgrades netherite gear to enderium at the smithing table.",
+  "item.endrise.enderium_sword": "Enderium Sword",
+  "item.endrise.enderium_pickaxe": "Enderium Pickaxe",
+  "item.endrise.enderium_axe": "Enderium Axe",
+  "item.endrise.enderium_shovel": "Enderium Shovel",
+  "item.endrise.enderium_hoe": "Enderium Hoe",
+  "item.endrise.enderium_helmet": "Enderium Helmet",
+  "item.endrise.enderium_chestplate": "Enderium Chestplate",
+  "item.endrise.enderium_leggings": "Enderium Leggings",
+  "item.endrise.enderium_boots": "Enderium Boots"
 }

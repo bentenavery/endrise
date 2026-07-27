@@ -9,7 +9,6 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.minecraft.world.item.equipment.trim.ArmorTrim;
 
 /**
  * Soulbound: enchantment for enderium-infused gear. On death the gear vanishes with its
@@ -26,13 +25,9 @@ public final class Soulbound {
 
     private Soulbound() {}
 
-    /** Tools carry the smithing marker component; armor counts via an enderium trim. */
-    public static boolean isInfused(ItemStack stack) {
-        if (stack.has(Endrise.ENDERIUM_INFUSED.get())) {
-            return true;
-        }
-        ArmorTrim trim = stack.get(DataComponents.TRIM);
-        return trim != null && trim.material().is(Endrise.ENDERIUM_TRIM);
+    /** Enderium gear (the #endrise:soulbound_able items) is the only gear the End gives back. */
+    public static boolean isEnderiumGear(ItemStack stack) {
+        return stack.is(Endrise.SOULBOUND_ABLE);
     }
 
     public static boolean isSoulbound(HolderLookup.Provider registries, ItemStack stack) {
@@ -42,7 +37,7 @@ public final class Soulbound {
 
     /** True when this stack should skip death drops and return to its owner. */
     public static boolean protects(HolderLookup.Provider registries, ItemStack stack) {
-        return !stack.isEmpty() && isInfused(stack) && isSoulbound(registries, stack);
+        return !stack.isEmpty() && isEnderiumGear(stack) && isSoulbound(registries, stack);
     }
 
     /** The craftable Soulbound book (as it appears in the creative tab). */

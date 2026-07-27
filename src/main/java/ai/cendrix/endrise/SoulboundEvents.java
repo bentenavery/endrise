@@ -105,11 +105,11 @@ public final class SoulboundEvents {
         }
     }
 
-    /** Soulbound only lands on enderium-infused (or enderium-trimmed) gear, whether it
-     *  arrives from a book (stored enchantments) or a sacrificed item (live enchantments). */
+    /** Soulbound only lands on enderium gear, whether it arrives from a book
+     *  (stored enchantments) or a sacrificed item (live enchantments). */
     @SubscribeEvent
     static void onAnvilUpdate(AnvilUpdateEvent event) {
-        if (Soulbound.isInfused(event.getLeft())) {
+        if (Soulbound.isEnderiumGear(event.getLeft())) {
             return;
         }
         ItemStack right = event.getRight();
