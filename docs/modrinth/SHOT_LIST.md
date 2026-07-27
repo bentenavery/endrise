@@ -2,9 +2,11 @@
 
 A staged world named **Endrise Photo Studio** lives in the dev client's saves
 (`run/saves/`, main branch). Open it with `./gradlew runClient`. You load in
-creative, in the End, on the studio island, wearing the full kit: trimmed
-netherite armor, infused soulbound pick in hand. Signs mark each shot.
-Screenshots land in `run/screenshots/` (F2). Press F1 to hide the HUD first.
+creative, in the End, on the studio island, wearing the full soulbound
+enderium set with the enderium pickaxe in hand (v0.3 gear; hotbar also has
+the sword, template, a netherite pick to demo the upgrade, materials, and a
+smithing table + anvil to place). Signs mark each shot. Screenshots land in
+`run/screenshots/` (F2). Press F1 to hide the HUD first.
 
 ## Shot 1: the ore seam
 
@@ -15,10 +17,11 @@ frame the seam with void sky at the edges, F1, F2. A second angle mid-mining
 
 ## Shot 2: the kit
 
-By the chest (which holds a backup of everything). F5 to third person, face
-the camera toward the armor trim shimmer, pick in hand. For a tooltip shot:
-open the inventory and hover the pick so "Soulbound I / Efficiency V /
-Unbreaking III" shows. Two flavors, pick the better one.
+By the chest. F5 to third person: full enderium armor (teal with the purple
+signature) and the enderium pickaxe in hand. Alternative flavor: place the
+smithing table, put netherite pick + template + ingot in it, and screenshot
+the upgrade moment with the enderium result showing. For a tooltip shot:
+hover the pick so "Soulbound I / Efficiency V / Unbreaking III" shows.
 
 ## Shot 3: the return
 
