@@ -6,13 +6,16 @@ import com.mojang.logging.LogUtils;
 
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Unit;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.armortrim.TrimMaterial;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
@@ -65,12 +68,30 @@ public class Endrise {
     public static final DeferredItem<Item> ENDERIUM_UPGRADE_TEMPLATE =
             ITEMS.registerSimpleItem("enderium_upgrade_smithing_template");
 
+    public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
+
+    // Everything Endrise adds, in one place (items stay in the vanilla category tabs too)
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> ENDRISE_TAB =
+            CREATIVE_TABS.register("endrise", () -> CreativeModeTab.builder()
+                    .title(Component.translatable("itemGroup.endrise"))
+                    .icon(() -> new ItemStack(ENDERIUM_INGOT.get()))
+                    .displayItems((params, output) -> {
+                        output.accept(ENDERIUM_ORE_ITEM.get());
+                        output.accept(RAW_ENDERIUM.get());
+                        output.accept(ENDERIUM_INGOT.get());
+                        output.accept(ENDERIUM_UPGRADE_TEMPLATE.get());
+                        output.accept(Soulbound.book(params.holders()));
+                    })
+                    .build());
+
     public Endrise(IEventBus modEventBus, ModContainer modContainer) {
         modEventBus.addListener(this::commonSetup);
 
         BLOCKS.register(modEventBus);
         ITEMS.register(modEventBus);
         DATA_COMPONENTS.register(modEventBus);
+        CREATIVE_TABS.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);
     }

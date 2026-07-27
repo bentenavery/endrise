@@ -6,12 +6,13 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.flag.FeatureFlags;
 import net.minecraft.world.inventory.AnvilMenu;
 import net.minecraft.world.inventory.SmithingMenu;
+import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -39,6 +40,7 @@ public final class EndriseSelfTest {
 
         boolean ok = runAnvilChecks(server, player);
         ok &= runSmithingChecks(player);
+        ok &= runCreativeTabCheck(server);
         Endrise.LOGGER.info("[SELFTEST] {}", ok ? "ALL PASS" : "FAILURES PRESENT");
         server.halt(false);
     }
@@ -50,10 +52,7 @@ public final class EndriseSelfTest {
         ItemStack soulboundPick = new ItemStack(Items.DIAMOND_PICKAXE);
         soulboundPick.enchant(soulbound, 1);
 
-        ItemStack soulboundBook = new ItemStack(Items.ENCHANTED_BOOK);
-        ItemEnchantments.Mutable stored = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
-        stored.set(soulbound, 1);
-        soulboundBook.set(DataComponents.STORED_ENCHANTMENTS, stored.toImmutable());
+        ItemStack soulboundBook = Soulbound.book(server.registryAccess());
 
         ItemStack infusedPick = new ItemStack(Items.DIAMOND_PICKAXE);
         infusedPick.set(Endrise.ENDERIUM_INFUSED.get(), Unit.INSTANCE);
@@ -135,6 +134,18 @@ public final class EndriseSelfTest {
     private static boolean report(boolean pass, String label) {
         Endrise.LOGGER.info("[SELFTEST] {}: {}", pass ? "PASS" : "FAIL", label);
         return pass;
+    }
+
+    /** The tab's display list builds lazily on first open; force it here so a broken
+     *  generator fails the self-test instead of the first player to click the tab. */
+    private static boolean runCreativeTabCheck(MinecraftServer server) {
+        CreativeModeTab tab = Endrise.ENDRISE_TAB.get();
+        tab.buildContents(new CreativeModeTab.ItemDisplayParameters(
+                FeatureFlags.DEFAULT_FLAGS, false, server.registryAccess()));
+        var items = tab.getDisplayItems();
+        boolean hasBook = items.stream().anyMatch(s -> s.is(Items.ENCHANTED_BOOK));
+        return report(items.size() == 5 && hasBook,
+                "creative tab: endrise tab builds 5 entries incl. soulbound book (got " + items.size() + ")");
     }
 
     private static boolean smith(Player player, ItemStack template, ItemStack base,
