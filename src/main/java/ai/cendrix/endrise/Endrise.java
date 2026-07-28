@@ -29,7 +29,10 @@ import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.item.equipment.EquipmentAsset;
 import net.minecraft.world.item.equipment.EquipmentAssets;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -118,6 +121,66 @@ public class Endrise {
     public static final DeferredItem<Item> ENDERIUM_BOOTS = ITEMS.registerSimpleItem("enderium_boots",
             p -> p.humanoidArmor(ENDERIUM_ARMOR_MATERIAL, ArmorType.BOOTS).fireResistant());
 
+    // ---- Tide 5: Set in Stone. The End's masonry; the palette the Cenotaphs
+    // are built from. Worked stone keeps end stone's stats; metals mirror their
+    // vanilla counterparts. ----
+    private static BlockBehaviour.Properties stoneProps() {
+        return BlockBehaviour.Properties.of().mapColor(MapColor.SAND)
+                .strength(3.0F, 9.0F).sound(SoundType.STONE);
+    }
+
+    public static final DeferredBlock<Block> POLISHED_END_STONE =
+            BLOCKS.registerBlock("polished_end_stone", Block::new, Endrise::stoneProps);
+    public static final DeferredBlock<Block> END_STONE_TILES =
+            BLOCKS.registerBlock("end_stone_tiles", Block::new, Endrise::stoneProps);
+    public static final DeferredBlock<Block> CHISELED_END_STONE_TILES =
+            BLOCKS.registerBlock("chiseled_end_stone_tiles", Block::new, Endrise::stoneProps);
+    public static final DeferredBlock<StairBlock> POLISHED_END_STONE_STAIRS =
+            BLOCKS.registerBlock("polished_end_stone_stairs",
+                    p -> new StairBlock(POLISHED_END_STONE.get().defaultBlockState(), p), Endrise::stoneProps);
+    public static final DeferredBlock<StairBlock> END_STONE_TILE_STAIRS =
+            BLOCKS.registerBlock("end_stone_tile_stairs",
+                    p -> new StairBlock(END_STONE_TILES.get().defaultBlockState(), p), Endrise::stoneProps);
+    public static final DeferredBlock<SlabBlock> POLISHED_END_STONE_SLAB =
+            BLOCKS.registerBlock("polished_end_stone_slab", SlabBlock::new, Endrise::stoneProps);
+    public static final DeferredBlock<SlabBlock> END_STONE_TILE_SLAB =
+            BLOCKS.registerBlock("end_stone_tile_slab", SlabBlock::new, Endrise::stoneProps);
+
+    public static final DeferredBlock<Block> ENDERIUM_BLOCK =
+            BLOCKS.registerBlock("enderium_block", Block::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WARPED_NYLIUM).strength(50.0F, 1200.0F)
+                    .requiresCorrectToolForDrops().sound(SoundType.NETHERITE_BLOCK));
+    public static final DeferredBlock<Block> RAW_ENDERIUM_BLOCK =
+            BLOCKS.registerBlock("raw_enderium_block", Block::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.WARPED_NYLIUM).strength(5.0F, 6.0F)
+                    .requiresCorrectToolForDrops().sound(SoundType.STONE));
+    public static final DeferredBlock<EnderiumLanternBlock> ENDERIUM_LANTERN =
+            BLOCKS.registerBlock("enderium_lantern", EnderiumLanternBlock::new,
+                    () -> BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_CYAN).forceSolidOn()
+                            .requiresCorrectToolForDrops().strength(3.5F)
+                            .sound(SoundType.LANTERN).lightLevel(state -> 15).noOcclusion());
+
+    public static final DeferredItem<BlockItem> POLISHED_END_STONE_ITEM =
+            ITEMS.registerSimpleBlockItem("polished_end_stone", POLISHED_END_STONE);
+    public static final DeferredItem<BlockItem> END_STONE_TILES_ITEM =
+            ITEMS.registerSimpleBlockItem("end_stone_tiles", END_STONE_TILES);
+    public static final DeferredItem<BlockItem> CHISELED_END_STONE_TILES_ITEM =
+            ITEMS.registerSimpleBlockItem("chiseled_end_stone_tiles", CHISELED_END_STONE_TILES);
+    public static final DeferredItem<BlockItem> POLISHED_END_STONE_STAIRS_ITEM =
+            ITEMS.registerSimpleBlockItem("polished_end_stone_stairs", POLISHED_END_STONE_STAIRS);
+    public static final DeferredItem<BlockItem> END_STONE_TILE_STAIRS_ITEM =
+            ITEMS.registerSimpleBlockItem("end_stone_tile_stairs", END_STONE_TILE_STAIRS);
+    public static final DeferredItem<BlockItem> POLISHED_END_STONE_SLAB_ITEM =
+            ITEMS.registerSimpleBlockItem("polished_end_stone_slab", POLISHED_END_STONE_SLAB);
+    public static final DeferredItem<BlockItem> END_STONE_TILE_SLAB_ITEM =
+            ITEMS.registerSimpleBlockItem("end_stone_tile_slab", END_STONE_TILE_SLAB);
+    public static final DeferredItem<BlockItem> ENDERIUM_BLOCK_ITEM =
+            ITEMS.registerSimpleBlockItem("enderium_block", ENDERIUM_BLOCK);
+    public static final DeferredItem<BlockItem> RAW_ENDERIUM_BLOCK_ITEM =
+            ITEMS.registerSimpleBlockItem("raw_enderium_block", RAW_ENDERIUM_BLOCK);
+    public static final DeferredItem<BlockItem> ENDERIUM_LANTERN_ITEM =
+            ITEMS.registerSimpleBlockItem("enderium_lantern", ENDERIUM_LANTERN);
+
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
@@ -140,6 +203,16 @@ public class Endrise {
                         output.accept(ENDERIUM_CHESTPLATE.get());
                         output.accept(ENDERIUM_LEGGINGS.get());
                         output.accept(ENDERIUM_BOOTS.get());
+                        output.accept(POLISHED_END_STONE_ITEM.get());
+                        output.accept(POLISHED_END_STONE_STAIRS_ITEM.get());
+                        output.accept(POLISHED_END_STONE_SLAB_ITEM.get());
+                        output.accept(END_STONE_TILES_ITEM.get());
+                        output.accept(END_STONE_TILE_STAIRS_ITEM.get());
+                        output.accept(END_STONE_TILE_SLAB_ITEM.get());
+                        output.accept(CHISELED_END_STONE_TILES_ITEM.get());
+                        output.accept(RAW_ENDERIUM_BLOCK_ITEM.get());
+                        output.accept(ENDERIUM_BLOCK_ITEM.get());
+                        output.accept(ENDERIUM_LANTERN_ITEM.get());
                         output.accept(Soulbound.book(params.holders()));
                     })
                     .build());
@@ -177,6 +250,20 @@ public class Endrise {
             event.accept(ENDERIUM_AXE);
             event.accept(ENDERIUM_SHOVEL);
             event.accept(ENDERIUM_HOE);
+        }
+        if (event.getTabKey() == CreativeModeTabs.BUILDING_BLOCKS) {
+            event.accept(POLISHED_END_STONE_ITEM);
+            event.accept(POLISHED_END_STONE_STAIRS_ITEM);
+            event.accept(POLISHED_END_STONE_SLAB_ITEM);
+            event.accept(END_STONE_TILES_ITEM);
+            event.accept(END_STONE_TILE_STAIRS_ITEM);
+            event.accept(END_STONE_TILE_SLAB_ITEM);
+            event.accept(CHISELED_END_STONE_TILES_ITEM);
+            event.accept(RAW_ENDERIUM_BLOCK_ITEM);
+            event.accept(ENDERIUM_BLOCK_ITEM);
+        }
+        if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
+            event.accept(ENDERIUM_LANTERN_ITEM);
         }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(ENDERIUM_SWORD);
