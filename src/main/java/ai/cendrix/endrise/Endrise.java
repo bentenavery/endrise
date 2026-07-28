@@ -28,6 +28,19 @@ import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.item.equipment.EquipmentAsset;
 import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.Consumables;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.FlowerPotBlock;
+import net.neoforged.neoforge.attachment.AttachmentType;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.SoundType;
@@ -182,6 +195,48 @@ public class Endrise {
     public static final DeferredItem<BlockItem> ENDERIUM_LANTERN_ITEM =
             ITEMS.registerSimpleBlockItem("enderium_lantern", ENDERIUM_LANTERN);
 
+    // ---- Tide 6: Mourning Blooms + the petal economy ----
+    public static final DeferredRegister<MobEffect> MOB_EFFECTS =
+            DeferredRegister.create(Registries.MOB_EFFECT, MODID);
+    /** Marker effect: the teleport itself happens in BloomEvents on natural expiry. */
+    public static final DeferredHolder<MobEffect, MobEffect> RETURN_EFFECT =
+            MOB_EFFECTS.register("return", () -> new MobEffect(MobEffectCategory.BENEFICIAL, 0x2FC39D) {});
+
+    public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
+            DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MODID);
+    /** Where the draught was drunk; persists across logout with the player. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<GlobalPos>> RETURN_ANCHOR =
+            ATTACHMENTS.register("return_anchor", () -> AttachmentType
+                    .builder(() -> GlobalPos.of(Level.OVERWORLD, BlockPos.ZERO))
+                    .serialize(GlobalPos.MAP_CODEC).build());
+
+    public static final DeferredBlock<MourningBloomBlock> MOURNING_BLOOM =
+            BLOCKS.registerBlock("mourning_bloom", MourningBloomBlock::new,
+                    () -> BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_PURPLE)
+                            .noCollision().instabreak().sound(SoundType.GRASS)
+                            .lightLevel(state -> 7)
+                            .offsetType(BlockBehaviour.OffsetType.XZ)
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
+    // 26.x FlowerPotBlock(content, props) self-registers with the vanilla pot
+    public static final DeferredBlock<FlowerPotBlock> POTTED_MOURNING_BLOOM =
+            BLOCKS.registerBlock("potted_mourning_bloom",
+                    p -> new FlowerPotBlock(MOURNING_BLOOM.get(), p),
+                    () -> BlockBehaviour.Properties.of().instabreak().noOcclusion()
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
+    public static final DeferredItem<BlockItem> MOURNING_BLOOM_ITEM =
+            ITEMS.registerSimpleBlockItem("mourning_bloom", MOURNING_BLOOM);
+
+    public static final DeferredItem<Item> VOID_PETAL = ITEMS.registerSimpleItem("void_petal");
+    public static final DeferredItem<Item> DRAUGHT_OF_RETURN = ITEMS.registerSimpleItem("draught_of_return",
+            p -> p.stacksTo(16)
+                    .craftRemainder(Items.GLASS_BOTTLE)
+                    .usingConvertsTo(Items.GLASS_BOTTLE)
+                    .food(new FoodProperties.Builder().alwaysEdible().build(),
+                            Consumables.defaultDrink()
+                                    .onConsume(new ApplyStatusEffectsConsumeEffect(
+                                            new MobEffectInstance(RETURN_EFFECT, 1800, 0)))
+                                    .build()));
+
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
@@ -214,6 +269,9 @@ public class Endrise {
                         output.accept(RAW_ENDERIUM_BLOCK_ITEM.get());
                         output.accept(ENDERIUM_BLOCK_ITEM.get());
                         output.accept(ENDERIUM_LANTERN_ITEM.get());
+                        output.accept(MOURNING_BLOOM_ITEM.get());
+                        output.accept(VOID_PETAL.get());
+                        output.accept(DRAUGHT_OF_RETURN.get());
                         output.accept(Soulbound.book(params.holders()));
                     })
                     .build());
@@ -225,6 +283,8 @@ public class Endrise {
         ITEMS.register(modEventBus);
         DATA_COMPONENTS.register(modEventBus);
         CREATIVE_TABS.register(modEventBus);
+        MOB_EFFECTS.register(modEventBus);
+        ATTACHMENTS.register(modEventBus);
 
         modEventBus.addListener(this::addCreative);
     }
@@ -262,6 +322,15 @@ public class Endrise {
             event.accept(CHISELED_END_STONE_TILES_ITEM);
             event.accept(RAW_ENDERIUM_BLOCK_ITEM);
             event.accept(ENDERIUM_BLOCK_ITEM);
+        }
+        if (event.getTabKey() == CreativeModeTabs.NATURAL_BLOCKS) {
+            event.accept(MOURNING_BLOOM_ITEM);
+        }
+        if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
+            event.accept(VOID_PETAL);
+        }
+        if (event.getTabKey() == CreativeModeTabs.FOOD_AND_DRINKS) {
+            event.accept(DRAUGHT_OF_RETURN);
         }
         if (event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(ENDERIUM_LANTERN_ITEM);
