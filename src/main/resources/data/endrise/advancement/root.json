@@ -9,7 +9,7 @@
     "icon": {
       "id": "endrise:raw_enderium"
     },
-    "background": "minecraft:gui/advancements/backgrounds/end",
+    "background": "minecraft:textures/gui/advancements/backgrounds/end.png",
     "show_toast": true,
     "announce_to_chat": false
   },

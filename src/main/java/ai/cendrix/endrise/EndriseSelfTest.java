@@ -51,6 +51,7 @@ public final class EndriseSelfTest {
         immediateOk &= runMasonryChecks(server);
         immediateOk &= runBloomChecks(server);
         immediateOk &= runCenotaphChecks(server);
+        immediateOk &= runWayHomeChecks(server);
         // Void checks need real server ticks: fresh entities only reach the queryable
         // index once the entity manager processes its pending queue, and the scan
         // itself runs on a tick cadence. Armed here, asserted in onTick.
@@ -327,6 +328,131 @@ public final class EndriseSelfTest {
         return ok;
     }
 
+    private static boolean runWayHomeChecks(MinecraftServer server) {
+        boolean ok = true;
+        ServerLevel overworld = server.overworld();
+
+        // The pearl recipe: ender pearl center, petals cardinal, ingots corners
+        var rm = server.getRecipeManager();
+        var grid = java.util.List.of(
+                new ItemStack(Endrise.ENDERIUM_INGOT.get()), new ItemStack(Endrise.VOID_PETAL.get()),
+                new ItemStack(Endrise.ENDERIUM_INGOT.get()), new ItemStack(Endrise.VOID_PETAL.get()),
+                new ItemStack(Items.ENDER_PEARL), new ItemStack(Endrise.VOID_PETAL.get()),
+                new ItemStack(Endrise.ENDERIUM_INGOT.get()), new ItemStack(Endrise.VOID_PETAL.get()),
+                new ItemStack(Endrise.ENDERIUM_INGOT.get()));
+        var pearlRecipe = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(3, 3, new java.util.ArrayList<>(grid)), overworld);
+        ok &= report(pearlRecipe.isPresent()
+                        && pearlRecipe.get().value().assemble(
+                                net.minecraft.world.item.crafting.CraftingInput.of(3, 3, new java.util.ArrayList<>(grid)),
+                                server.registryAccess()).is(Endrise.HOMEWARD_PEARL.get()),
+                "way home: pearl + petals + ingots craft the Homeward Pearl");
+
+        // The full 8-node tab, in covenant order
+        String[][] chain = {
+                {"root", null}, {"deeper_than_diamonds", "root"}, {"bound", "deeper_than_diamonds"},
+                {"the_tier_above", "bound"}, {"nothing_is_lost", "the_tier_above"},
+                {"there_and_back", "nothing_is_lost"}, {"someone_was_here", "there_and_back"},
+                {"the_way_home", "someone_was_here"}};
+        boolean chainOk = true;
+        for (String[] link : chain) {
+            var adv = server.getAdvancements().get(Endrise.id(link[0]));
+            chainOk &= adv != null && (link[1] == null
+                    ? adv.value().parent().isEmpty()
+                    : adv.value().parent().map(par -> par.equals(Endrise.id(link[1]))).orElse(false));
+        }
+        ok &= report(chainOk, "way home: the eight-node advancement chain is wired in order");
+
+        ok &= report(Endrise.ENDERIUM_ORE.get() instanceof GlimmerBlock
+                        && Endrise.ENDERIUM_BLOCK.get() instanceof GlimmerBlock,
+                "way home: ore and block glimmer (animateTick subclasses)");
+
+        // Resolution from the End: a spawnless player resolves OUT of the End to
+        // the overworld world-spawn fallback, and resolution alone never touches
+        // the credits flag. (Cross-dim teleport mechanics are vanilla's; per the
+        // fake-player doctrine we assert the decision, not the landing.)
+        ServerLevel end = server.getLevel(net.minecraft.world.level.Level.END);
+        ServerPlayer endPlayer = net.neoforged.neoforge.common.util.FakePlayerFactory.get(end,
+                new com.mojang.authlib.GameProfile(
+                        java.util.UUID.nameUUIDFromBytes("endrise-wayhome-end".getBytes()),
+                        "EndriseWayHomeEnd"));
+        var resolved = endPlayer.findRespawnPositionAndUseSpawnBlock(true,
+                net.minecraft.world.level.portal.DimensionTransition.DO_NOTHING);
+        ok &= report(resolved.newLevel() == overworld && !endPlayer.seenCredits,
+                "way home: spawnless resolution leaves the End for world spawn, credits untouched");
+
+        // The inverted-polarity regression: the pearl flag must NOT spend a
+        // respawn anchor charge, the death flag MUST. This boolean is the most
+        // drift-prone value in the tide (26.x consumeSpawnBlock=false keeps the
+        // charge; on 1.21.1 the keep-flag is true), and without a charged
+        // anchor in play it is dead code to every other test.
+        ServerLevel nether = server.getLevel(net.minecraft.world.level.Level.NETHER);
+        var anchorPos = new net.minecraft.core.BlockPos(48, 100, 48);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                nether.setBlockAndUpdate(anchorPos.offset(dx, -1, dz),
+                        net.minecraft.world.level.block.Blocks.OBSIDIAN.defaultBlockState());
+                for (int dy = 1; dy <= 2; dy++) {
+                    nether.setBlockAndUpdate(anchorPos.offset(dx, dy, dz),
+                            net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                }
+                if (dx != 0 || dz != 0) {
+                    nether.setBlockAndUpdate(anchorPos.offset(dx, 0, dz),
+                            net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+        nether.setBlockAndUpdate(anchorPos, net.minecraft.world.level.block.Blocks.RESPAWN_ANCHOR
+                .defaultBlockState().setValue(net.minecraft.world.level.block.RespawnAnchorBlock.CHARGE, 4));
+        ServerPlayer anchored = net.neoforged.neoforge.common.util.FakePlayerFactory.get(nether,
+                new com.mojang.authlib.GameProfile(
+                        java.util.UUID.nameUUIDFromBytes("endrise-wayhome-anchor".getBytes()),
+                        "EndriseWayHomeAnchor"));
+        anchored.setRespawnPosition(net.minecraft.world.level.Level.NETHER, anchorPos, 0.0F, false, false);
+        var pearlWay = anchored.findRespawnPositionAndUseSpawnBlock(true, net.minecraft.world.level.portal.DimensionTransition.DO_NOTHING);
+        int afterPearl = nether.getBlockState(anchorPos)
+                .getValue(net.minecraft.world.level.block.RespawnAnchorBlock.CHARGE);
+        var deathWay = anchored.findRespawnPositionAndUseSpawnBlock(false, net.minecraft.world.level.portal.DimensionTransition.DO_NOTHING);
+        int afterDeath = nether.getBlockState(anchorPos)
+                .getValue(net.minecraft.world.level.block.RespawnAnchorBlock.CHARGE);
+        ok &= report(pearlWay.newLevel() == nether && afterPearl == 4
+                        && deathWay.newLevel() == nether && afterDeath == 3,
+                "way home: the pearl leaves anchor charges alone, death still spends one");
+
+        var boundAdv = server.getAdvancements().get(Endrise.id("bound"));
+        ok &= report(boundAdv != null && boundAdv.value().criteria().containsKey("bound"),
+                "way home: Bound's anvil award criterion is wired");
+
+        // The full use() on an overworld fake player (same-dimension travel):
+        // consumed, cooldown armed, criterion wired, credits never shown.
+        ServerPlayer user = net.neoforged.neoforge.common.util.FakePlayerFactory.get(overworld,
+                new com.mojang.authlib.GameProfile(
+                        java.util.UUID.nameUUIDFromBytes("endrise-wayhome-ow".getBytes()),
+                        "EndriseWayHomeOw"));
+        user.getInventory().clearContent();
+        user.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,
+                new ItemStack(Endrise.HOMEWARD_PEARL.get(), 2));
+        var first = Endrise.HOMEWARD_PEARL.get().use(overworld, user, net.minecraft.world.InteractionHand.MAIN_HAND);
+        ItemStack after = user.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND);
+        boolean consumedOnce = first.getResult() == net.minecraft.world.InteractionResult.CONSUME
+                && after.getCount() == 1;
+        boolean cooling = user.getCooldowns().isOnCooldown(Endrise.HOMEWARD_PEARL.get());
+        var second = Endrise.HOMEWARD_PEARL.get().use(overworld, user, net.minecraft.world.InteractionHand.MAIN_HAND);
+        boolean blocked = second.getResult() == net.minecraft.world.InteractionResult.PASS
+                && user.getItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND).getCount() == 1;
+        ok &= report(consumedOnce && cooling && blocked,
+                "way home: one pearl spent, five-second cooldown blocks the second");
+        // Fake players' PlayerAdvancements is a no-op stub, so progress can't be
+        // asserted here; the award call ran inside use() (a broken criterion name
+        // would still pass silently, hence the explicit criteria-key check).
+        var wayHome = server.getAdvancements().get(Endrise.id("the_way_home"));
+        ok &= report(wayHome != null && wayHome.value().criteria().containsKey("returned")
+                        && !user.seenCredits,
+                "way home: the award criterion is wired, the credits are not rolled");
+        user.getInventory().clearContent();
+        return ok;
+    }
+
     private static boolean runCenotaphChecks(MinecraftServer server) {
         boolean ok = true;
         ServerLevel end = server.getLevel(net.minecraft.world.level.Level.END);
@@ -570,7 +696,7 @@ public final class EndriseSelfTest {
         var items = tab.getDisplayItems();
         boolean hasBook = items.stream().anyMatch(s -> s.is(Items.ENCHANTED_BOOK)
                 && s.has(DataComponents.STORED_ENCHANTMENTS));
-        return report(items.size() == 27 && hasBook,
-                "creative tab: 27 entries incl. soulbound book (got " + items.size() + ")");
+        return report(items.size() == 28 && hasBook,
+                "creative tab: 28 entries incl. soulbound book (got " + items.size() + ")");
     }
 }

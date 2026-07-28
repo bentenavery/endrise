@@ -10,7 +10,7 @@ authors="Avery Palermini"
 displayURL="https://github.com/bentenavery/endrise"
 updateJSONURL="https://raw.githubusercontent.com/bentenavery/endrise/main/update.json"
 description='''
-The tide of the End is rising. Enderium seams now run through the end stone; the rest of the End update is on its way.
+In the End, nothing is ever truly lost. Enderium ore and the tier above netherite, Soulbound gear that returns from death, a void that gives back, End masonry, Mourning Blooms, the graves of travelers who never made it home, and the Homeward Pearl that finally carries you back. Eight tides, one covenant.
 '''
 
 [[dependencies.${mod_id}]]

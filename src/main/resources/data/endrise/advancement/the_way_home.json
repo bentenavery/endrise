@@ -1,16 +1,16 @@
 {
-  "parent": "endrise:the_tier_above",
+  "parent": "endrise:someone_was_here",
   "display": {
     "title": {
-      "translate": "advancements.endrise.nothing_is_lost.title"
+      "translate": "advancements.endrise.the_way_home.title"
     },
     "description": {
-      "translate": "advancements.endrise.nothing_is_lost.description"
+      "translate": "advancements.endrise.the_way_home.description"
     },
     "icon": {
-      "id": "endrise:enderium_ingot"
+      "id": "endrise:homeward_pearl"
     },
-    "frame": "goal",
+    "frame": "challenge",
     "show_toast": true,
     "announce_to_chat": true
   },

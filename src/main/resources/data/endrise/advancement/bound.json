@@ -1,27 +1,27 @@
 {
-  "parent": "endrise:the_tier_above",
+  "parent": "endrise:deeper_than_diamonds",
   "display": {
     "title": {
-      "translate": "advancements.endrise.nothing_is_lost.title"
+      "translate": "advancements.endrise.bound.title"
     },
     "description": {
-      "translate": "advancements.endrise.nothing_is_lost.description"
+      "translate": "advancements.endrise.bound.description"
     },
     "icon": {
-      "id": "endrise:enderium_ingot"
+      "id": "minecraft:enchanted_book"
     },
     "frame": "goal",
     "show_toast": true,
     "announce_to_chat": true
   },
   "criteria": {
-    "returned": {
+    "bound": {
       "trigger": "minecraft:impossible"
     }
   },
   "requirements": [
     [
-      "returned"
+      "bound"
     ]
   ]
 }

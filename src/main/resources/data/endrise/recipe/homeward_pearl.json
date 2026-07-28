@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "endrise:enderium_ingot"
+    },
+    "P": {
+      "item": "endrise:void_petal"
+    },
+    "E": {
+      "item": "minecraft:ender_pearl"
+    }
+  },
+  "pattern": [
+    "IPI",
+    "PEP",
+    "IPI"
+  ],
+  "result": {
+    "count": 1,
+    "id": "endrise:homeward_pearl"
+  }
+}
