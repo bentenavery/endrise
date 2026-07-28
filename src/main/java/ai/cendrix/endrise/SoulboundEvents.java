@@ -11,6 +11,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.GameRules;
@@ -62,6 +65,31 @@ public final class SoulboundEvents {
                 player.setItemSlot(slot, ItemStack.EMPTY);
             }
         }
+
+        // Teach the covenant at the exact moment of confusion: dying in the void
+        // with unbound enderium is the one loss the void path refuses by design.
+        if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD) && carriesUnboundEnderium(registries, player)) {
+            player.sendSystemMessage(Component.translatable("chat.endrise.void_kept")
+                    .withStyle(style -> style.withColor(0x2FC39D).withItalic(true)));
+        }
+    }
+
+    /** Any void-protected item on this player that Soulbound does not cover. */
+    static boolean carriesUnboundEnderium(HolderLookup.Provider registries, ServerPlayer player) {
+        Inventory inventory = player.getInventory();
+        for (int slot = 0; slot < Inventory.INVENTORY_SIZE; slot++) {
+            ItemStack stack = inventory.getItem(slot);
+            if (!stack.isEmpty() && stack.is(VoidReturn.VOID_RETURNING) && !Soulbound.isSoulbound(registries, stack)) {
+                return true;
+            }
+        }
+        for (EquipmentSlot slot : EQUIPMENT) {
+            ItemStack stack = player.getItemBySlot(slot);
+            if (!stack.isEmpty() && stack.is(VoidReturn.VOID_RETURNING) && !Soulbound.isSoulbound(registries, stack)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @SubscribeEvent
