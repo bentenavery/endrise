@@ -76,8 +76,10 @@ public class Endrise {
     // Enderium: the End's buried metal. Ore sits in end stone, drops raw enderium, smelts to ingots.
     // Where it spawns is data, not code: data/endrise/worldgen/* defines the veins,
     // data/endrise/neoforge/biome_modifier/ injects them into every #minecraft:is_end biome.
-    public static final DeferredBlock<Block> ENDERIUM_ORE = BLOCKS.registerSimpleBlock("enderium_ore",
-            p -> p.mapColor(MapColor.SAND)
+    // GlimmerBlock since Tide 8: exposed faces shed reverse-portal motes
+    public static final DeferredBlock<Block> ENDERIUM_ORE = BLOCKS.registerBlock("enderium_ore",
+            GlimmerBlock::new, () -> BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.SAND)
                     .strength(3.0F, 9.0F) // end stone's hardness and blast resistance, so veins feel native
                     .requiresCorrectToolForDrops()
                     .sound(SoundType.STONE));
@@ -160,7 +162,7 @@ public class Endrise {
             BLOCKS.registerBlock("end_stone_tile_slab", SlabBlock::new, Endrise::stoneProps);
 
     public static final DeferredBlock<Block> ENDERIUM_BLOCK =
-            BLOCKS.registerBlock("enderium_block", Block::new, () -> BlockBehaviour.Properties.of()
+            BLOCKS.registerBlock("enderium_block", GlimmerBlock::new, () -> BlockBehaviour.Properties.of()
                     .mapColor(MapColor.WARPED_NYLIUM).strength(50.0F, 1200.0F)
                     .requiresCorrectToolForDrops().sound(SoundType.NETHERITE_BLOCK));
     public static final DeferredBlock<Block> RAW_ENDERIUM_BLOCK =
@@ -237,6 +239,11 @@ public class Endrise {
                                             new MobEffectInstance(RETURN_EFFECT, 1800, 0)))
                                     .build()));
 
+    // ---- Tide 8: The Way Home. Pearl center, petals cardinal, ingots at the
+    // corners; from anywhere, it carries you to your own respawn. ----
+    public static final DeferredItem<HomewardPearlItem> HOMEWARD_PEARL =
+            ITEMS.registerItem("homeward_pearl", p -> new HomewardPearlItem(p.stacksTo(16)));
+
     // ---- Tide 7: the cenotaph needs its own structure type: vanilla jigsaw
     // JSON has no ground condition and the End is mostly hole. ----
     public static final DeferredRegister<net.minecraft.world.level.levelgen.structure.StructureType<?>> STRUCTURE_TYPES =
@@ -280,6 +287,7 @@ public class Endrise {
                         output.accept(MOURNING_BLOOM_ITEM.get());
                         output.accept(VOID_PETAL.get());
                         output.accept(DRAUGHT_OF_RETURN.get());
+                        output.accept(HOMEWARD_PEARL.get());
                         output.accept(Soulbound.book(params.holders()));
                     })
                     .build());

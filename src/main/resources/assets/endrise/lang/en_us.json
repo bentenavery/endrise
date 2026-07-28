@@ -41,5 +41,14 @@
   "advancements.endrise.there_and_back.description": "Drink a Draught of Return and let it carry you home",
   "chat.endrise.reanchored": "The draught re-anchors here.",
   "advancements.endrise.someone_was_here.title": "Someone Was Here",
-  "advancements.endrise.someone_was_here.description": "Find a cenotaph standing quiet in the outer End"
+  "advancements.endrise.someone_was_here.description": "Find a cenotaph standing quiet in the outer End",
+  "item.endrise.homeward_pearl": "Homeward Pearl",
+  "advancements.endrise.deeper_than_diamonds.title": "Deeper Than Diamonds",
+  "advancements.endrise.deeper_than_diamonds.description": "Smelt the End’s buried metal into an enderium ingot",
+  "advancements.endrise.bound.title": "Bound",
+  "advancements.endrise.bound.description": "Bind a piece of gear to your soul at the anvil",
+  "advancements.endrise.the_tier_above.title": "The Tier Above",
+  "advancements.endrise.the_tier_above.description": "Hold gear forged beyond netherite",
+  "advancements.endrise.the_way_home.title": "The Way Home",
+  "advancements.endrise.the_way_home.description": "Crush a Homeward Pearl and let the End carry you back to your bed"
 }
