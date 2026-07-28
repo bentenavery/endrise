@@ -180,6 +180,16 @@ public final class EndriseSelfTest {
                             .map(s -> s.takeReady(player.getUUID(), 100L).size() == 1).orElse(false);
             voidOk &= report(roundTrips, "store: codec round-trips a pending entry (save-crash regression)");
 
+            // Death-hint predicate: flips off once the gear is soulbound
+            player.getInventory().clearContent();
+            player.getInventory().setItem(2, new ItemStack(Endrise.ENDERIUM_PICKAXE.get()));
+            boolean unbound = SoulboundEvents.carriesUnboundEnderium(server.registryAccess(), (ServerPlayer) player);
+            player.getInventory().getItem(2).enchant(server.registryAccess()
+                    .lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Soulbound.KEY), 1);
+            boolean bound = !SoulboundEvents.carriesUnboundEnderium(server.registryAccess(), (ServerPlayer) player);
+            player.getInventory().clearContent();
+            voidOk &= report(unbound && bound, "hint: unbound-enderium detection flips with Soulbound");
+
             boolean ok = immediateOk && voidOk;
             Endrise.LOGGER.info("[SELFTEST] {}", ok ? "ALL PASS" : "FAILURES PRESENT");
             server.halt(false);
