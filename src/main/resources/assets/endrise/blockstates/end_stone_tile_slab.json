@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "endrise:block/end_stone_tile_slab"
+    },
+    "type=double": {
+      "model": "endrise:block/end_stone_tiles"
+    },
+    "type=top": {
+      "model": "endrise:block/end_stone_tile_slab_top"
+    }
+  }
+}
