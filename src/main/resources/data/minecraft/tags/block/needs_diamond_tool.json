@@ -1,5 +1,7 @@
 {
   "values": [
-    "endrise:enderium_ore"
+    "endrise:enderium_ore",
+    "endrise:enderium_block",
+    "endrise:raw_enderium_block"
   ]
 }

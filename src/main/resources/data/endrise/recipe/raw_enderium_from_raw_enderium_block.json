@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "ingredients": [
+    {
+      "item": "endrise:raw_enderium_block"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "endrise:raw_enderium"
+  }
+}

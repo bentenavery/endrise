@@ -47,6 +47,7 @@ public final class EndriseSelfTest {
         immediateOk = runSmithingChecks(server, player);
         immediateOk &= runAnvilChecks(server, player);
         immediateOk &= runCreativeTabCheck(server);
+        immediateOk &= runMasonryChecks(server);
         // Void checks need real server ticks: fresh entities only reach the queryable
         // index once the entity manager processes its pending queue, and the scan
         // itself runs on a tick cadence. Armed here, asserted in onTick.
@@ -194,6 +195,54 @@ public final class EndriseSelfTest {
         }
     }
 
+    private static boolean runMasonryChecks(MinecraftServer server) {
+        var level = server.overworld();
+        var rm = server.getRecipeManager();
+        boolean ok = true;
+
+        var nineIngots = java.util.Collections.nCopies(9,
+                new ItemStack(Endrise.ENDERIUM_INGOT.get()));
+        var compress = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(3, 3, new java.util.ArrayList<>(nineIngots)), level);
+        ok &= report(compress.isPresent()
+                        && compress.get().value().assemble(
+                                net.minecraft.world.item.crafting.CraftingInput.of(3, 3, new java.util.ArrayList<>(nineIngots)),
+                                server.registryAccess()).is(Endrise.ENDERIUM_BLOCK_ITEM.get()),
+                "masonry: 9 ingots craft the enderium block");
+        var expand = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(1, 1,
+                        java.util.List.of(new ItemStack(Endrise.ENDERIUM_BLOCK_ITEM.get()))), level);
+        ok &= report(expand.isPresent(), "masonry: the block uncrafts back to ingots");
+
+        ok &= report(rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.STONECUTTING,
+                        new net.minecraft.world.item.crafting.SingleRecipeInput(
+                                new ItemStack(net.minecraft.world.item.Items.END_STONE)), level).isPresent(),
+                "masonry: stonecutter accepts end stone");
+        boolean allCutPaths = true;
+        for (String cut : new String[] {"polished_end_stone_from_end_stone_stonecutting",
+                "chiseled_end_stone_tiles_from_end_stone_stonecutting",
+                "end_stone_tile_slab_from_polished_end_stone_stonecutting"}) {
+            allCutPaths &= rm.byKey(Endrise.id(cut)).isPresent();
+        }
+        ok &= report(allCutPaths, "masonry: stonecutting family paths are registered");
+
+        ok &= report(Endrise.ENDERIUM_BLOCK.get().defaultBlockState()
+                        .is(net.minecraft.tags.BlockTags.BEACON_BASE_BLOCKS),
+                "masonry: enderium block is a beacon base");
+        ok &= report(Endrise.ENDERIUM_LANTERN.get().defaultBlockState().getLightEmission() == 15,
+                "masonry: lantern shines at light 15");
+        var fourEndStone = java.util.Collections.nCopies(4,
+                new ItemStack(net.minecraft.world.item.Items.END_STONE));
+        var bricks = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(2, 2, new java.util.ArrayList<>(fourEndStone)), level);
+        ok &= report(bricks.isPresent()
+                        && bricks.get().value().assemble(
+                                net.minecraft.world.item.crafting.CraftingInput.of(2, 2, new java.util.ArrayList<>(fourEndStone)),
+                                server.registryAccess()).is(net.minecraft.world.item.Items.END_STONE_BRICKS),
+                "masonry: vanilla end stone bricks recipe is untouched (no 2x2 collision)");
+        return ok;
+    }
+
     private static boolean runSmithingChecks(MinecraftServer server, Player player) {
         ItemStack template = new ItemStack(Endrise.ENDERIUM_UPGRADE_TEMPLATE.get());
         ItemStack ingot = new ItemStack(Endrise.ENDERIUM_INGOT.get());
@@ -279,7 +328,7 @@ public final class EndriseSelfTest {
         var items = tab.getDisplayItems();
         boolean hasBook = items.stream().anyMatch(s -> s.is(Items.ENCHANTED_BOOK)
                 && s.has(DataComponents.STORED_ENCHANTMENTS));
-        return report(items.size() == 14 && hasBook,
-                "creative tab: 14 entries incl. soulbound book (got " + items.size() + ")");
+        return report(items.size() == 24 && hasBook,
+                "creative tab: 24 entries incl. soulbound book (got " + items.size() + ")");
     }
 }

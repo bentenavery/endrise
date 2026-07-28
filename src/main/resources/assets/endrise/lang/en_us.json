@@ -21,5 +21,15 @@
   "advancements.endrise.root.title": "Buried Light",
   "advancements.endrise.root.description": "Pull the End's buried metal from the stone",
   "advancements.endrise.nothing_is_lost.title": "Nothing Is Lost",
-  "advancements.endrise.nothing_is_lost.description": "Lose something enderium to the void and have it find its way home"
+  "advancements.endrise.nothing_is_lost.description": "Lose something enderium to the void and have it find its way home",
+  "block.endrise.polished_end_stone": "Polished End Stone",
+  "block.endrise.end_stone_tiles": "End Stone Tiles",
+  "block.endrise.chiseled_end_stone_tiles": "Chiseled End Stone Tiles",
+  "block.endrise.polished_end_stone_stairs": "Polished End Stone Stairs",
+  "block.endrise.end_stone_tile_stairs": "End Stone Tile Stairs",
+  "block.endrise.polished_end_stone_slab": "Polished End Stone Slab",
+  "block.endrise.end_stone_tile_slab": "End Stone Tile Slab",
+  "block.endrise.enderium_block": "Block of Enderium",
+  "block.endrise.raw_enderium_block": "Block of Raw Enderium",
+  "block.endrise.enderium_lantern": "Enderium Lantern"
 }
