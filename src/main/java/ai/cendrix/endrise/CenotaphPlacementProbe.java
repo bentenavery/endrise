@@ -64,7 +64,7 @@ public final class CenotaphPlacementProbe {
                 }
             }
             BlockPos core = null;
-            boolean chest = false;
+            BlockPos chestAt = null;
             for (BlockPos p : BlockPos.betweenClosed(
                     site.getX() - 24, 5, site.getZ() - 24,
                     site.getX() + 24, 130, site.getZ() + 24)) {
@@ -72,12 +72,12 @@ public final class CenotaphPlacementProbe {
                 if (state.is(Endrise.ENDERIUM_BLOCK.get())) {
                     core = p.immutable();
                 } else if (state.is(net.minecraft.world.level.block.Blocks.CHEST)) {
-                    chest = true;
+                    chestAt = p.immutable();
                 }
             }
-            if (core == null || !chest) {
+            if (core == null || chestAt == null) {
                 missing++;
-                Endrise.LOGGER.info("[CENOPROBE] MISSING at {} (core={}, chest={})", site, core, chest);
+                Endrise.LOGGER.info("[CENOPROBE] MISSING at {} (core={}, chest={})", site, core, chestAt);
                 var chunk = end.getChunk(cp.x(), cp.z());
                 var start = end.structureManager().getStartForStructure(
                         net.minecraft.core.SectionPos.bottomOf(chunk), structure.value(), chunk);
@@ -89,13 +89,17 @@ public final class CenotaphPlacementProbe {
                                 site.getX() + 8, site.getZ() + 8));
                 continue;
             }
-            // Ground audit: a 5x5 sample grid around the core; a column counts as
-            // held if anything solid sits within 8 blocks under foundation level.
+            // Ground audit: 5x5 columns at step 3 (13x13 span) centered on the
+            // core-chest midpoint, so the audit tracks the ruin rather than the
+            // core's corner of it; a column counts as held if anything solid
+            // sits within 8 blocks under foundation level.
+            int ax = (core.getX() + chestAt.getX()) / 2;
+            int az = (core.getZ() + chestAt.getZ()) / 2;
             int held = 0;
-            for (int dx = -4; dx <= 4; dx += 2) {
-                for (int dz = -4; dz <= 4; dz += 2) {
+            for (int dx = -6; dx <= 6; dx += 3) {
+                for (int dz = -6; dz <= 6; dz += 3) {
                     for (int dy = 2; dy <= 9; dy++) {
-                        if (!end.getBlockState(core.offset(dx, -dy, dz)).isAir()) {
+                        if (!end.getBlockState(new BlockPos(ax + dx, core.getY() - dy, az + dz)).isAir()) {
                             held++;
                             break;
                         }
@@ -109,7 +113,7 @@ public final class CenotaphPlacementProbe {
                 sparse++;
             }
             Endrise.LOGGER.info("[CENOPROBE] {} at {} coreY={} ground={}/25 chest={}",
-                    verdict, site, core.getY(), held, chest);
+                    verdict, site, core.getY(), held, chestAt);
         }
         Endrise.LOGGER.info("[CENOPROBE] SUMMARY sites={} ok={} sparse={} missing={}",
                 sites.size(), okCount, sparse, missing);
