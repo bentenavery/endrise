@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:simple_block",
+  "config": {
+    "to_place": {
+      "type": "minecraft:weighted_state_provider",
+      "entries": [
+        {
+          "data": {
+            "Name": "endrise:mourning_bloom"
+          },
+          "weight": 2
+        },
+        {
+          "data": {
+            "Name": "endrise:mourning_bloom"
+          },
+          "weight": 1
+        }
+      ]
+    }
+  }
+}

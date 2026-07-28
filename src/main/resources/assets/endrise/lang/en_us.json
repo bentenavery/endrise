@@ -31,5 +31,12 @@
   "block.endrise.end_stone_tile_slab": "End Stone Tile Slab",
   "block.endrise.enderium_block": "Block of Enderium",
   "block.endrise.raw_enderium_block": "Block of Raw Enderium",
-  "block.endrise.enderium_lantern": "Enderium Lantern"
+  "block.endrise.enderium_lantern": "Enderium Lantern",
+  "block.endrise.mourning_bloom": "Mourning Bloom",
+  "block.endrise.potted_mourning_bloom": "Potted Mourning Bloom",
+  "item.endrise.void_petal": "Void Petal",
+  "item.endrise.draught_of_return": "Draught of Return",
+  "effect.endrise.return": "Return",
+  "advancements.endrise.there_and_back.title": "There and Back",
+  "advancements.endrise.there_and_back.description": "Drink a Draught of Return and let it carry you home"
 }
