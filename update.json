@@ -1,10 +1,10 @@
 {
   "homepage": "https://github.com/bentenavery/endrise/releases",
   "promos": {
-    "26.1.2-latest": "0.4.1",
-    "26.1.2-recommended": "0.4.1",
-    "1.21.1-latest": "0.4.1",
-    "1.21.1-recommended": "0.4.1"
+    "26.1.2-latest": "0.5.0",
+    "26.1.2-recommended": "0.5.0",
+    "1.21.1-latest": "0.5.0",
+    "1.21.1-recommended": "0.5.0"
   },
   "26.1.2": {
     "0.2.1": "Fix: the anvil no longer lets a soulbound tool sacrifice smuggle Soulbound onto non-infused gear.",
@@ -12,7 +12,8 @@
     "0.1.0": "Enderium ore, raw enderium, ingots, End worldgen.",
     "0.3.0": "The Enderium Tier: enderium gear is now real items above netherite; upgrade netherite gear at the smithing table. Soulbound is enderium-exclusive (0.2.x infusion markers and trims no longer qualify).",
     "0.4.0": "The Void Gives Back: enderium items you drop return from the void, the despawn timer, and fire; ender pearls cost nothing in enderium armor. Also fixes two shipped soulbound bugs (death-screen delivery wipe, store save crash).",
-    "0.4.1": "The void now tells you why it kept your gear: dying with unbound enderium prints the covenant hint. Gameplay unchanged: thrown/lost enderium returns, died-with needs Soulbound."
+    "0.4.1": "The void now tells you why it kept your gear: dying with unbound enderium prints the covenant hint. Gameplay unchanged: thrown/lost enderium returns, died-with needs Soulbound.",
+    "0.5.0": "Set in Stone: the End learns masonry. Polished end stone + tile families, the Mourner Relief, Blocks of Enderium (beacon base) and Raw Enderium, and the Enderium Lantern with rising teal embers. Full stonecutter support."
   },
   "1.21.1": {
     "0.2.1": "Fix: the anvil no longer lets a soulbound tool sacrifice smuggle Soulbound onto non-infused gear.",
@@ -20,6 +21,7 @@
     "0.1.0": "Enderium ore, raw enderium, ingots, End worldgen.",
     "0.3.0": "The Enderium Tier: enderium gear is now real items above netherite; upgrade netherite gear at the smithing table. Soulbound is enderium-exclusive (0.2.x infusion markers and trims no longer qualify).",
     "0.4.0": "The Void Gives Back: enderium items you drop return from the void, the despawn timer, and fire; ender pearls cost nothing in enderium armor. Also fixes two shipped soulbound bugs (death-screen delivery wipe, store save crash).",
-    "0.4.1": "The void now tells you why it kept your gear: dying with unbound enderium prints the covenant hint. Gameplay unchanged: thrown/lost enderium returns, died-with needs Soulbound."
+    "0.4.1": "The void now tells you why it kept your gear: dying with unbound enderium prints the covenant hint. Gameplay unchanged: thrown/lost enderium returns, died-with needs Soulbound.",
+    "0.5.0": "Set in Stone: the End learns masonry. Polished end stone + tile families, the Mourner Relief, Blocks of Enderium (beacon base) and Raw Enderium, and the Enderium Lantern with rising teal embers. Full stonecutter support."
   }
 }

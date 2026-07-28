@@ -22,6 +22,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 
 /**
  * Headless verification of the enderium tier: the smithing upgrade path
@@ -48,6 +49,7 @@ public final class EndriseSelfTest {
         immediateOk &= runAnvilChecks(server, player);
         immediateOk &= runCreativeTabCheck(server);
         immediateOk &= runMasonryChecks(server);
+        immediateOk &= runBloomChecks(server);
         // Void checks need real server ticks: fresh entities only reach the queryable
         // index once the entity manager processes its pending queue, and the scan
         // itself runs on a tick cadence. Armed here, asserted in onTick.
@@ -243,6 +245,76 @@ public final class EndriseSelfTest {
         return ok;
     }
 
+    private static boolean runBloomChecks(MinecraftServer server) {
+        boolean ok = true;
+        ServerLevel ow = server.overworld();
+        var base = new net.minecraft.core.BlockPos(8, 200, 8);
+        ow.setBlockAndUpdate(base, net.minecraft.world.level.block.Blocks.END_STONE.defaultBlockState());
+        var bloomState = Endrise.MOURNING_BLOOM.get().defaultBlockState();
+        ok &= report(bloomState.canSurvive(ow, base.above()), "bloom: plants on end stone");
+        ow.setBlockAndUpdate(base, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+        ok &= report(!bloomState.canSurvive(ow, base.above()), "bloom: refuses ordinary stone");
+        ow.setBlockAndUpdate(base, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+
+        var rm = server.getRecipeManager();
+        var petals = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(1, 1,
+                        java.util.List.of(new ItemStack(Endrise.MOURNING_BLOOM_ITEM.get()))), ow);
+        ok &= report(petals.isPresent(), "bloom: one bloom crafts into void petals");
+        var draught = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(2, 1, java.util.List.of(
+                        new ItemStack(Endrise.VOID_PETAL.get()),
+                        new ItemStack(Items.GLASS_BOTTLE))), ow);
+        ok &= report(draught.isPresent(), "bloom: petal + bottle brews the draught");
+        var bottle = new ItemStack(Endrise.DRAUGHT_OF_RETURN.get());
+        ok &= report(bottle.has(DataComponents.FOOD)
+                        && bottle.get(DataComponents.FOOD).usingConvertsTo().isPresent(),
+                "draught: drinkable, bottle returned");
+
+        ServerLevel end = server.getLevel(net.minecraft.world.level.Level.END);
+        ok &= report(end != null, "bloom: the End level is loaded");
+        if (end != null) {
+            var site = new net.minecraft.core.BlockPos(100, 60, 100);
+            end.setBlockAndUpdate(site, net.minecraft.world.level.block.Blocks.END_STONE.defaultBlockState());
+            end.setBlockAndUpdate(site.above(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            boolean placed = BloomEvents.placeDeathBloom(end, site.above());
+            ok &= report(placed && end.getBlockState(site.above()).is(Endrise.MOURNING_BLOOM.get()),
+                    "bloom: a death in the End plants a bloom");
+            end.setBlockAndUpdate(site.above(), net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            end.setBlockAndUpdate(site, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+
+            // A distinct profile: the default factory fake is cached on the overworld
+            ServerPlayer endPlayer = FakePlayerFactory.get(end,
+                    new com.mojang.authlib.GameProfile(
+                            java.util.UUID.nameUUIDFromBytes("endrise-end-tester".getBytes()),
+                            "EndriseEndTester"));
+            var home = new net.minecraft.core.BlockPos(200, 180, 200); // far above any island: guaranteed air
+            endPlayer.setData(Endrise.RETURN_ANCHOR.get(),
+                    net.minecraft.core.GlobalPos.of(net.minecraft.world.level.Level.END, home));
+            // RETURNED proves the full decision chain (anchor read, dimension rules,
+            // air-spot search, award). The final teleportTo is vanilla's, and fake
+            // players' stub connections swallow it, so position is not asserted here.
+            ok &= report(BloomEvents.completeReturn(endPlayer) == BloomEvents.ReturnResult.RETURNED,
+                    "draught: natural expiry in the End returns to the anchor");
+            endPlayer.setData(Endrise.RETURN_ANCHOR.get(),
+                    net.minecraft.core.GlobalPos.of(net.minecraft.world.level.Level.OVERWORLD, home));
+            ok &= report(BloomEvents.completeReturn(endPlayer) == BloomEvents.ReturnResult.FIZZLED,
+                    "draught: an overworld anchor fizzles");
+
+            // Corpse-tick regression: expiry on the death screen must not fire the return
+            endPlayer.setData(Endrise.RETURN_ANCHOR.get(),
+                    net.minecraft.core.GlobalPos.of(net.minecraft.world.level.Level.END, home));
+            endPlayer.setHealth(0.0F);
+            BloomEvents.onEffectExpired(new MobEffectEvent.Expired(endPlayer,
+                    new net.minecraft.world.effect.MobEffectInstance(Endrise.RETURN_EFFECT, 1, 0)));
+            boolean heldThroughDeath = endPlayer.hasData(Endrise.RETURN_ANCHOR.get());
+            endPlayer.setHealth(20.0F);
+            endPlayer.removeData(Endrise.RETURN_ANCHOR.get());
+            ok &= report(heldThroughDeath, "draught: expiry on a corpse is ignored");
+        }
+        return ok;
+    }
+
     private static boolean runSmithingChecks(MinecraftServer server, Player player) {
         ItemStack template = new ItemStack(Endrise.ENDERIUM_UPGRADE_TEMPLATE.get());
         ItemStack ingot = new ItemStack(Endrise.ENDERIUM_INGOT.get());
@@ -328,7 +400,7 @@ public final class EndriseSelfTest {
         var items = tab.getDisplayItems();
         boolean hasBook = items.stream().anyMatch(s -> s.is(Items.ENCHANTED_BOOK)
                 && s.has(DataComponents.STORED_ENCHANTMENTS));
-        return report(items.size() == 24 && hasBook,
-                "creative tab: 24 entries incl. soulbound book (got " + items.size() + ")");
+        return report(items.size() == 27 && hasBook,
+                "creative tab: 27 entries incl. soulbound book (got " + items.size() + ")");
     }
 }

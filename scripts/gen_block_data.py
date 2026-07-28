@@ -201,4 +201,75 @@ for kind in ('block', 'item'):
     emit(f'data/minecraft/tags/{kind}/slabs.json',
          {'values': [f'{NS}:{s}' for s in SLABS]})
 
+
+# ---- Tide 6: Mourning Bloom + petal economy --------------------------------
+BLOOM = 'mourning_bloom'
+mb = {'minecraft:block/poppy': f'{NS}:block/{BLOOM}',
+      'minecraft:poppy': f'{NS}:{BLOOM}',
+      'minecraft:blocks/poppy': f'{NS}:blocks/{BLOOM}',
+      'minecraft:item/poppy': f'{NS}:item/{BLOOM}',
+      'minecraft:block/potted_poppy': f'{NS}:block/potted_{BLOOM}',
+      'minecraft:potted_poppy': f'{NS}:potted_{BLOOM}',
+      'minecraft:blocks/potted_poppy': f'{NS}:blocks/potted_{BLOOM}'}
+emit(f'assets/{NS}/blockstates/{BLOOM}.json',
+     rewrite(crib('assets/minecraft/blockstates/poppy.json'), mb))
+emit(f'assets/{NS}/models/block/{BLOOM}.json',
+     rewrite(crib('assets/minecraft/models/block/poppy.json'), mb))
+emit(f'assets/{NS}/blockstates/potted_{BLOOM}.json',
+     rewrite(crib('assets/minecraft/blockstates/potted_poppy.json'), mb))
+emit(f'assets/{NS}/models/block/potted_{BLOOM}.json',
+     rewrite(crib('assets/minecraft/models/block/potted_poppy.json'), mb))
+emit(f'data/{NS}/loot_table/blocks/{BLOOM}.json',
+     rewrite(crib('data/minecraft/loot_table/blocks/poppy.json'), mb))
+emit(f'data/{NS}/loot_table/blocks/potted_{BLOOM}.json',
+     rewrite(crib('data/minecraft/loot_table/blocks/potted_poppy.json'), mb))
+
+# flower item: flat sprite of the block texture
+emit(f'assets/{NS}/models/item/{BLOOM}.json',
+     {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{NS}:block/{BLOOM}'}})
+if BRANCH == '26x':
+    emit(f'assets/{NS}/items/{BLOOM}.json',
+         {'model': {'type': 'minecraft:model', 'model': f'{NS}:item/{BLOOM}'}})
+for it in ('void_petal', 'draught_of_return'):
+    emit(f'assets/{NS}/models/item/{it}.json',
+         {'parent': 'minecraft:item/generated', 'textures': {'layer0': f'{NS}:item/{it}'}})
+    if BRANCH == '26x':
+        emit(f'assets/{NS}/items/{it}.json',
+             {'model': {'type': 'minecraft:model', 'model': f'{NS}:item/{it}'}})
+
+# worldgen: rare constellations, never the dragon island
+# Branch-stable inner feature: on 1.21.1 flower_default is random_patch-WRAPPED,
+# and cribbing it there would double-patch (~64x density). simple_block exists on
+# both branches and self-validates the ground, so the placed chain stays shared.
+emit(f'data/{NS}/worldgen/configured_feature/mourning_blooms.json', {
+    'type': 'minecraft:simple_block',
+    'config': {'to_place': {'type': 'minecraft:simple_state_provider',
+                            'state': {'Name': f'{NS}:{BLOOM}'}}}})
+emit(f'data/{NS}/worldgen/placed_feature/mourning_blooms.json', {
+    'feature': f'{NS}:mourning_blooms',
+    'placement': [
+        {'type': 'minecraft:rarity_filter', 'chance': 6},
+        {'type': 'minecraft:in_square'},
+        {'type': 'minecraft:heightmap', 'heightmap': 'MOTION_BLOCKING'},
+        {'type': 'minecraft:count', 'count': 5},
+        # uniform: the trapezoid INT provider does not exist on 1.21.1
+        {'type': 'minecraft:random_offset',
+         'xz_spread': {'type': 'minecraft:uniform', 'min_inclusive': -4, 'max_inclusive': 4},
+         'y_spread': {'type': 'minecraft:uniform', 'min_inclusive': -2, 'max_inclusive': 2}},
+        {'type': 'minecraft:block_predicate_filter',
+         'predicate': {'type': 'minecraft:matching_block_tag', 'tag': 'minecraft:air'}},
+        {'type': 'minecraft:biome'},
+    ],
+})
+emit(f'data/{NS}/neoforge/biome_modifier/add_mourning_blooms.json', {
+    'type': 'neoforge:add_features',
+    'biomes': ['minecraft:end_highlands', 'minecraft:end_midlands',
+               'minecraft:small_end_islands', 'minecraft:end_barrens'],
+    'features': f'{NS}:mourning_blooms',
+    'step': 'vegetal_decoration',
+})
+
+shapeless('void_petals_from_bloom', [f'{NS}:{BLOOM}'], f'{NS}:void_petal', 2)
+shapeless('draught_of_return', [f'{NS}:void_petal', 'minecraft:glass_bottle'], f'{NS}:draught_of_return', 1)
+
 print(f'{BRANCH}: emitted {counts["files"]} files into {RES}')
