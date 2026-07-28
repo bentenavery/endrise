@@ -162,6 +162,18 @@ public final class SoulboundEvents {
 
     /** Soulbound only lands on enderium gear, whether it arrives from a book
      *  (stored enchantments) or a sacrificed item (live enchantments). */
+    /** Tide 8's advancement tab: taking a soulbound result off the anvil is Bound. */
+    @SubscribeEvent
+    static void onAnvilCraft(net.neoforged.neoforge.event.entity.player.AnvilCraftEvent.Post event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && Soulbound.isSoulbound(player.level().registryAccess(), event.getOutput())) {
+            var holder = player.level().getServer().getAdvancements().get(Endrise.id("bound"));
+            if (holder != null) {
+                player.getAdvancements().award(holder, "bound");
+            }
+        }
+    }
+
     @SubscribeEvent
     static void onAnvilUpdate(AnvilUpdateEvent event) {
         if (Soulbound.isEnderiumGear(event.getLeft())) {
