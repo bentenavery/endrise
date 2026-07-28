@@ -1,0 +1,34 @@
+{
+  "parent": "endrise:bound",
+  "display": {
+    "title": {
+      "translate": "advancements.endrise.the_tier_above.title"
+    },
+    "description": {
+      "translate": "advancements.endrise.the_tier_above.description"
+    },
+    "icon": {
+      "id": "endrise:enderium_pickaxe"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "has_gear": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#endrise:soulbound_able"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_gear"
+    ]
+  ]
+}
