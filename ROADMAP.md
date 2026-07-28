@@ -15,10 +15,9 @@ Detailed designs for the upcoming tides (deliverables, risks, verification, per-
 - [x] **Tide 3 (v0.3) — The Enderium Tier**: enderium gear became real items, the tier above netherite. Netherite gear + upgrade template + enderium ingot transmutes at the smithing table; enchantments and durability carry; full sprite set and worn armor. Soulbound is enderium-exclusive. (Replaced the invisible infusion-marker design after playtesting: an upgrade you can't see never reads as an upgrade.)
 - [x] **Tide 4 (v0.4) — The Void Gives Back**: enderium items you drop return from the void, the despawn timer, and fire; death drops stay Soulbound's business; pearls cost nothing in enderium armor. Also fixed two shipped soulbound bugs found by adversarial review (death-screen delivery wipe, store save crash).
 
-## The Covenant of Return (Tides 5-8)
+- [x] **Tide 5 (v0.5) — Set in Stone**: the End's masonry. Polished End Stone and End Stone Tiles families with stairs and slabs, Chiseled tiles bearing the Mourner's Relief, Blocks of Enderium (beacon base) and Raw Enderium, and the Enderium Lantern with upward-drifting teal embers. Full stonecutting graph, recipe-book wiring, and a generator that cribs every JSON format from the running version's own jar.
 
-- [ ] **Tide 5 (v0.5) — Set in Stone** *(1 weekend)*
-  The End's masonry: Enderium Block (beacon base, 9-ingot sink), Polished End Stone + End Stone Tiles families with stairs and slabs, Chiseled tiles bearing the Mourner's Relief, and the Enderium Lantern with teal flame and upward-drifting embers. Pure data + datagen; the material palette the Cenotaphs are built from.
+## The Covenant of Return (Tides 6-8)
 
 - [ ] **Tide 6 (v0.6) — Mourning Blooms** *(1 weekend)*
   A player death in the End sprouts a Mourning Bloom on the nearest end stone; rare natural patches too. Blooms craft into Void Petals; a petal + bottle makes the Draught of Return (drink, explore for 90 seconds, snap back to where you drank). First tide to ship through the live Modrinth listing, with a loud ask for tuning feedback.
