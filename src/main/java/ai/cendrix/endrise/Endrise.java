@@ -158,7 +158,8 @@ public class Endrise {
             BLOCKS.registerBlock("enderium_lantern", EnderiumLanternBlock::new,
                     () -> BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_CYAN).forceSolidOn()
                             .requiresCorrectToolForDrops().strength(3.5F)
-                            .sound(SoundType.LANTERN).lightLevel(state -> 15).noOcclusion());
+                            .sound(SoundType.LANTERN).lightLevel(state -> 15).noOcclusion()
+                            .pushReaction(net.minecraft.world.level.material.PushReaction.DESTROY));
 
     public static final DeferredItem<BlockItem> POLISHED_END_STONE_ITEM =
             ITEMS.registerSimpleBlockItem("polished_end_stone", POLISHED_END_STONE);

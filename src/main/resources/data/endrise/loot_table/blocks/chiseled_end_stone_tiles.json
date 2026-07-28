@@ -17,5 +17,5 @@
       "rolls": 1.0
     }
   ],
-  "random_sequence": "minecraft:blocks/chiseled_end_stone_tiles"
+  "random_sequence": "endrise:blocks/chiseled_end_stone_tiles"
 }

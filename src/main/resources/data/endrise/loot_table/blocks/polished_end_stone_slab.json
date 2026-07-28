@@ -31,5 +31,5 @@
       "rolls": 1.0
     }
   ],
-  "random_sequence": "minecraft:blocks/polished_end_stone_slab"
+  "random_sequence": "endrise:blocks/polished_end_stone_slab"
 }

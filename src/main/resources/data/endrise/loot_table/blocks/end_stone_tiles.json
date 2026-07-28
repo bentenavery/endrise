@@ -17,5 +17,5 @@
       "rolls": 1.0
     }
   ],
-  "random_sequence": "minecraft:blocks/end_stone_tiles"
+  "random_sequence": "endrise:blocks/end_stone_tiles"
 }

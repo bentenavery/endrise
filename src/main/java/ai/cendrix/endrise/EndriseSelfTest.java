@@ -234,6 +234,15 @@ public final class EndriseSelfTest {
                 "masonry: enderium block is a beacon base");
         ok &= report(Endrise.ENDERIUM_LANTERN.get().defaultBlockState().getLightEmission() == 15,
                 "masonry: lantern shines at light 15");
+        var fourEndStone = java.util.Collections.nCopies(4,
+                new ItemStack(net.minecraft.world.item.Items.END_STONE));
+        var bricks = rm.getRecipeFor(net.minecraft.world.item.crafting.RecipeType.CRAFTING,
+                net.minecraft.world.item.crafting.CraftingInput.of(2, 2, new java.util.ArrayList<>(fourEndStone)), level);
+        ok &= report(bricks.isPresent()
+                        && bricks.get().value().assemble(
+                                net.minecraft.world.item.crafting.CraftingInput.of(2, 2, new java.util.ArrayList<>(fourEndStone)))
+                                .is(net.minecraft.world.item.Items.END_STONE_BRICKS),
+                "masonry: vanilla end stone bricks recipe is untouched (no 2x2 collision)");
         return ok;
     }
 

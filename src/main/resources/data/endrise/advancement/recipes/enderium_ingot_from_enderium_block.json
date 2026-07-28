@@ -5,7 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": "minecraft:end_stone_bricks"
+            "items": "endrise:enderium_block"
           }
         ]
       },
@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "endrise:enderium_lantern"
+        "recipe": "endrise:enderium_ingot_from_enderium_block"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -26,7 +26,7 @@
   ],
   "rewards": {
     "recipes": [
-      "endrise:enderium_lantern"
+      "endrise:enderium_ingot_from_enderium_block"
     ]
   }
 }
