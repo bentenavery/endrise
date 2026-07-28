@@ -50,6 +50,7 @@ public final class EndriseSelfTest {
         immediateOk &= runCreativeTabCheck(server);
         immediateOk &= runMasonryChecks(server);
         immediateOk &= runBloomChecks(server);
+        immediateOk &= runCenotaphChecks(server);
         // Void checks need real server ticks: fresh entities only reach the queryable
         // index once the entity manager processes its pending queue, and the scan
         // itself runs on a tick cadence. Armed here, asserted in onTick.
@@ -76,6 +77,13 @@ public final class EndriseSelfTest {
 
         if (t == 2) {
             var spawn = level.getRespawnData().pos();
+            // Pin the drop lane loaded: on an empty server the boot tickets can
+            // expire mid-test, and an unloaded chunk archives its entities
+            // (UNLOADED_TO_CHUNK) before the scan ever sees them. The race only
+            // bites on 26.x (late entity indexing) but both suites pin it.
+            for (int cx = (spawn.getX() >> 4) - 1; cx <= ((spawn.getX() + 18) >> 4) + 1; cx++) {
+                level.setChunkForced(cx, spawn.getZ() >> 4, true);
+            }
             // Drops are spaced out: same-owner enderium stacks merge by design,
             // and merged test subjects made the 1.21.1 suite miscount captures
             player.setPos(spawn.getX() + 0.5, 80, spawn.getZ() + 0.5);
@@ -104,7 +112,10 @@ public final class EndriseSelfTest {
             expiring.lifespan = 1;
             expiring.tick();
             expiring.tick();
-        } else if (t == 30) {
+        } else if (t == 80) {
+            // t=80, not 30: the empty-server entity index on 26.x can lag the
+            // spawn drops past tick 30 (players online never see this; the scan
+            // just needs the index to exist). 80 ticks is 5x the observed lag.
             armedAt = -1;
             SoulboundStore store = SoulboundStore.get(server);
             long farFuture = level.getGameTime() + 10_000;
@@ -122,13 +133,14 @@ public final class EndriseSelfTest {
                     "void: natural scan + expire hook captured exactly the two enderium drops");
             voidOk &= report(tossed.isRemoved() && expiring.isRemoved(),
                     "void: captured entities were discarded");
-            // "Not captured" means we never discarded it into the store; on this empty
-            // test server uncaptured entities get archived as UNLOADED_TO_CHUNK, which
-            // is vanilla bookkeeping, not a capture.
-            voidOk &= report(diamond.getRemovalReason() != net.minecraft.world.entity.Entity.RemovalReason.DISCARDED,
+            // "Not captured" is asserted against the captured LIST, never entity
+            // state: on 1.21.1 spawn chunks tick, so uncaptured items keep
+            // falling until vanilla itself void-kills (DISCARDED) them, while on
+            // 26.x they hover unticked. The list is the same on both.
+            voidOk &= report(captured.stream().noneMatch(p -> p.stack().is(Items.DIAMOND_PICKAXE)),
                     "void: non-enderium items are not captured");
-            voidOk &= report(deathDrop.getRemovalReason() != net.minecraft.world.entity.Entity.RemovalReason.DISCARDED,
-                    "void: death-flagged drops are left for Soulbound");
+            voidOk &= report(captured.stream().filter(p -> p.stack().getCount() == 1).count() == 1,
+                    "void: death-flagged drops are left for Soulbound (only expiring's single)");
 
             if (captured.size() == 2) {
                 int before = player.getInventory().countItem(Endrise.ENDERIUM_INGOT.get());
@@ -315,6 +327,166 @@ public final class EndriseSelfTest {
             endPlayer.removeData(Endrise.RETURN_ANCHOR.get());
             ok &= report(heldThroughDeath, "draught: expiry on a corpse is ignored");
         }
+        return ok;
+    }
+
+    private static boolean runCenotaphChecks(MinecraftServer server) {
+        boolean ok = true;
+        ServerLevel end = server.getLevel(net.minecraft.world.level.Level.END);
+        if (end == null) {
+            return report(false, "cenotaph: the End level is loaded");
+        }
+
+        var structures = server.registryAccess().lookupOrThrow(Registries.STRUCTURE);
+        var structure = structures.get(net.minecraft.resources.ResourceKey.create(
+                Registries.STRUCTURE, Endrise.id("cenotaph")));
+        var biomes = server.registryAccess().lookupOrThrow(Registries.BIOME);
+        ok &= report(structure.isPresent()
+                        && structure.get().value().biomes().contains(
+                                biomes.getOrThrow(net.minecraft.world.level.biome.Biomes.END_MIDLANDS))
+                        && !structure.get().value().biomes().contains(
+                                biomes.getOrThrow(net.minecraft.world.level.biome.Biomes.THE_END)),
+                "cenotaph: registered for the outer End, never the dragon island");
+
+        var sets = server.registryAccess().lookupOrThrow(Registries.STRUCTURE_SET);
+        var set = sets.get(net.minecraft.resources.ResourceKey.create(
+                Registries.STRUCTURE_SET, Endrise.id("cenotaphs")));
+        boolean spacingOk = set.isPresent() && set.get().value().placement() instanceof
+                net.minecraft.world.level.levelgen.structure.placement.RandomSpreadStructurePlacement spread
+                && spread.spacing() == 34 && spread.separation() == 12;
+        ok &= report(spacingOk, "cenotaph: placement spaced 34 with separation 12");
+
+        var pools = server.registryAccess().lookupOrThrow(Registries.TEMPLATE_POOL);
+        var pool = pools.get(net.minecraft.resources.ResourceKey.create(
+                Registries.TEMPLATE_POOL, Endrise.id("cenotaph/start")));
+        ok &= report(pool.isPresent() && pool.get().value().size() == 4,
+                "cenotaph: start pool holds the four ruins");
+
+        var templates = server.getStructureManager();
+        var expected = java.util.Map.of(
+                "vigil", new net.minecraft.core.Vec3i(9, 6, 9),
+                "waygate", new net.minecraft.core.Vec3i(10, 7, 10),
+                "ring", new net.minecraft.core.Vec3i(11, 8, 11),
+                "fallen_hall", new net.minecraft.core.Vec3i(12, 7, 12));
+        boolean sizesOk = true;
+        for (var e : expected.entrySet()) {
+            var t = templates.get(Endrise.id("cenotaph/" + e.getKey()));
+            sizesOk &= t.isPresent() && t.get().getSize().equals(e.getValue());
+        }
+        ok &= report(sizesOk, "cenotaph: all four templates load with authored sizes");
+
+        // Real placements of ALL FOUR ruins with neighbor updates ON (flag 3):
+        // furniture that would pop after placement pops right here, and every
+        // chest must come out of the NBT wearing the loot table.
+        boolean furnitureOk = true, lootWiredAll = true;
+        int placedCount = 0;
+        String[] ruinNames = {"vigil", "waygate", "ring", "fallen_hall"};
+        for (int idx = 0; idx < ruinNames.length; idx++) {
+            var t = templates.get(Endrise.id("cenotaph/" + ruinNames[idx]));
+            if (t.isEmpty()) {
+                furnitureOk = false;
+                continue;
+            }
+            var origin = new net.minecraft.core.BlockPos(320 + idx * 48, 180, 320);
+            if (t.get().placeInWorld(end, origin, origin,
+                    new net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings(),
+                    end.getRandom(), 3)) {
+                placedCount++;
+            }
+            var size = t.get().getSize();
+            int chests = 0, cores = 0, reliefs = 0, lanterns = 0, blooms = 0;
+            net.minecraft.core.BlockPos chestPos = null;
+            for (var p : net.minecraft.core.BlockPos.betweenClosed(origin,
+                    origin.offset(size.getX() - 1, size.getY() - 1, size.getZ() - 1))) {
+                var state = end.getBlockState(p);
+                if (state.is(net.minecraft.world.level.block.Blocks.CHEST)) {
+                    chests++;
+                    chestPos = p.immutable();
+                } else if (state.is(Endrise.ENDERIUM_BLOCK.get())) {
+                    cores++;
+                } else if (state.is(Endrise.CHISELED_END_STONE_TILES.get())) {
+                    reliefs++;
+                } else if (state.is(Endrise.ENDERIUM_LANTERN.get())) {
+                    lanterns++;
+                } else if (state.is(Endrise.MOURNING_BLOOM.get())) {
+                    blooms++;
+                }
+            }
+            furnitureOk &= chests == 1 && cores == 1 && reliefs >= 1 && lanterns >= 1 && blooms == 3;
+            lootWiredAll &= chestPos != null && end.getBlockEntity(chestPos) instanceof
+                    net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity chest
+                    && chest.getLootTable() != null
+                    && chest.getLootTable().identifier().equals(Endrise.id("chests/cenotaph"));
+        }
+        ok &= report(placedCount == 4 && furnitureOk,
+                "cenotaph: all four ruins place whole, furniture survives updates");
+        ok &= report(lootWiredAll, "cenotaph: every chest wears the cenotaph loot table");
+
+        var table = server.reloadableRegistries().getLootTable(
+                net.minecraft.resources.ResourceKey.create(Registries.LOOT_TABLE, Endrise.id("chests/cenotaph")));
+        var params = new net.minecraft.world.level.storage.loot.LootParams.Builder(end)
+                .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN,
+                        new net.minecraft.world.phys.Vec3(320.5, 180.5, 320.5))
+                .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.CHEST);
+        Holder<Enchantment> soulbound = server.registryAccess()
+                .lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Soulbound.KEY);
+        int gearRolls = 0, soulboundSeen = 0, templateSeen = 0, ferrenSeen = 0;
+        boolean petalsOk = true, rawOk = true, wearOk = true;
+        for (int i = 0; i < 100; i++) {
+            java.util.List<ItemStack> items = new java.util.ArrayList<>();
+            table.getRandomItems(params, items::add);
+            int gear = 0, petals = 0, raw = 0;
+            for (ItemStack s : items) {
+                if (s.has(DataComponents.CUSTOM_NAME)) {
+                    gear++;
+                    if (EnchantmentHelper.getItemEnchantmentLevel(soulbound, s) > 0) {
+                        soulboundSeen++;
+                    }
+                    if (s.is(Endrise.ENDERIUM_PICKAXE.get())) {
+                        ferrenSeen++;
+                    }
+                    int max = s.getMaxDamage();
+                    if (max > 0 && (s.getDamageValue() < max * 0.25 || s.getDamageValue() > max * 0.75)) {
+                        wearOk = false;
+                    }
+                } else if (s.is(Endrise.VOID_PETAL.get())) {
+                    petals += s.getCount();
+                } else if (s.is(Endrise.RAW_ENDERIUM.get())) {
+                    raw += s.getCount();
+                } else if (s.is(Endrise.ENDERIUM_UPGRADE_TEMPLATE.get())) {
+                    templateSeen++;
+                }
+            }
+            if (gear == 1) {
+                gearRolls++;
+            }
+            petalsOk &= petals >= 2 && petals <= 4;
+            rawOk &= raw >= 2 && raw <= 5;
+        }
+        ok &= report(gearRolls == 100, "cenotaph loot: every chest holds exactly one named remembrance");
+        ok &= report(soulboundSeen >= 25 && soulboundSeen <= 55,
+                "cenotaph loot: soulbound rides ~40% of the gear (got " + soulboundSeen + "/100)");
+        ok &= report(petalsOk && rawOk, "cenotaph loot: petals 2-4 and raw enderium 2-5 every time");
+        ok &= report(templateSeen >= 4 && templateSeen <= 30,
+                "cenotaph loot: upgrade template near 15% (got " + templateSeen + "/100)");
+        ok &= report(ferrenSeen >= 1, "cenotaph loot: someone made it that far (enderium gear seen)");
+        ok &= report(wearOk, "cenotaph loot: remembrances arrive worn, never broken");
+
+        // Review regression: Soulbound from a chest rides VANILLA gear, and the
+        // covenant must honor the mark, not the metal (protects() is enchant-only).
+        ItemStack remembrance = new ItemStack(Items.IRON_SWORD);
+        boolean unmarkedIgnored = !Soulbound.protects(server.registryAccess(), remembrance);
+        remembrance.enchant(soulbound, 1);
+        ok &= report(unmarkedIgnored && Soulbound.protects(server.registryAccess(), remembrance),
+                "cenotaph loot: a marked remembrance is death-protected, an unmarked one is not");
+
+        var found = end.getChunkSource().getGenerator().findNearestMapStructure(
+                end, net.minecraft.core.HolderSet.direct(structure.get()),
+                new net.minecraft.core.BlockPos(0, 64, 0), 40, false);
+        ok &= report(found != null, "cenotaph: locate finds one within 40 chunks of origin");
+
+        ok &= report(server.getAdvancements().get(Endrise.id("someone_was_here")) != null,
+                "cenotaph: Someone Was Here is registered");
         return ok;
     }
 
