@@ -39,5 +39,7 @@
   "effect.endrise.return": "Return",
   "advancements.endrise.there_and_back.title": "There and Back",
   "advancements.endrise.there_and_back.description": "Drink a Draught of Return and let it carry you home",
-  "chat.endrise.reanchored": "The draught re-anchors here."
+  "chat.endrise.reanchored": "The draught re-anchors here.",
+  "advancements.endrise.someone_was_here.title": "Someone Was Here",
+  "advancements.endrise.someone_was_here.description": "Find a cenotaph standing quiet in the outer End"
 }

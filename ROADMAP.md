@@ -17,13 +17,10 @@ Detailed designs for the upcoming tides (deliverables, risks, verification, per-
 
 - [x] **Tide 5 (v0.5) — Set in Stone**: the End's masonry. Polished End Stone and End Stone Tiles families with stairs and slabs, Chiseled tiles bearing the Mourner's Relief, Blocks of Enderium (beacon base) and Raw Enderium, and the Enderium Lantern with upward-drifting teal embers. Full stonecutting graph, recipe-book wiring, and a generator that cribs every JSON format from the running version's own jar.
 
-## The Covenant of Return (Tides 6-8)
+- [x] **Tide 6 (v0.6) — Mourning Blooms**: the world keeps score of loss. End deaths sprout Mourning Blooms; rare natural constellations grow in the outer biomes; blooms craft Void Petals and petals bottle into the Draught of Return (drink, wander 90 seconds, snap back, End-only, last drink re-anchors loudly). The petal economy is open.
+- [x] **Tide 7 (v0.7) — The Cenotaphs**: four ruin variants (vigil, waygate, ring, fallen hall) scattered across the outer End on ground-checked placements that yield to the void: no floating graves, and /locate never lies. Every chest holds one named, worn remembrance (about 40% still Soulbound, and the covenant honors the mark on any metal; one traveler in twelve carried enderium), Void Petals, raw enderium, and a 15% upgrade template: the first renewable template source. Advancement: Someone Was Here.
 
-- [ ] **Tide 6 (v0.6) — Mourning Blooms** *(1 weekend)*
-  A player death in the End sprouts a Mourning Bloom on the nearest end stone; rare natural patches too. Blooms craft into Void Petals; a petal + bottle makes the Draught of Return (drink, explore for 90 seconds, snap back to where you drank). First tide to ship through the live Modrinth listing, with a loud ask for tuning feedback.
-
-- [ ] **Tide 7 (v0.7) — The Cenotaphs** *(2 weekends)*
-  Small jigsaw ruins scattered across the outer End: memorial stonework, blooms, a burning lantern, and a chest always holding one named, worn piece of gear from a traveler who never made it home, sometimes still soulbound, rarely enderium itself. Environmental storytelling, zero dialogue, and the renewable source of upgrade templates.
+## The Covenant of Return (Tide 8)
 
 - [ ] **Tide 8 (v1.0) — The Way Home** *(1 weekend)*
   The Homeward Pearl (petals + ingots around an ender pearl): from anywhere, any dimension, it carries you to your respawn point, consumed. Enderium ore and blocks get ambient teal motes and a rare hum. An advancement tab turns the arc into a guided tour, and the listing is promoted from alpha to the full 1.0 release.
@@ -37,6 +34,6 @@ Detailed designs for the upcoming tides (deliverables, risks, verification, per-
 
 ## Good first contributions
 
-- Playtest reports against the live tuning numbers: vein density, transmute costs, the Soulbound book recipe, the 8-second delay, and (from Tide 6 on) bloom density and draught duration
+- Playtest reports against the live tuning numbers: vein density, transmute costs, the Soulbound book recipe, the 8-second delay, bloom density and draught duration, and (from Tide 7 on) cenotaph spacing and loot rates
 - Texture polish passes within the enderium palette (see CONTRIBUTING.md)
 - Recipe advancement triggers and creative-tab ordering audits
