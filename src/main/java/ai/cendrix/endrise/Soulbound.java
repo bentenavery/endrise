@@ -35,9 +35,13 @@ public final class Soulbound {
         return EnchantmentHelper.getItemEnchantmentLevel(enchantment, stack) > 0;
     }
 
-    /** True when this stack should skip death drops and return to its owner. */
+    /** True when this stack should skip death drops and return to its owner.
+     *  Deliberately enchant-only: cenotaph remembrances carry Soulbound on iron
+     *  and diamond gear, and the covenant honors whatever bears the mark. The
+     *  anvil still gates APPLYING it to enderium, so looted pieces are the only
+     *  vanilla gear that can be marked. */
     public static boolean protects(HolderLookup.Provider registries, ItemStack stack) {
-        return !stack.isEmpty() && isEnderiumGear(stack) && isSoulbound(registries, stack);
+        return !stack.isEmpty() && isSoulbound(registries, stack);
     }
 
     /** The craftable Soulbound book (as it appears in the creative tab). */

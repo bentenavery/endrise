@@ -161,7 +161,7 @@ WAYGATE = {  # 10x10: an arch over a tiled causeway, core as lantern pedestal
 }
 
 RING = {  # 11x11: broken pillar circle around an enderium-relief-lantern cairn
-    'name': 'ring', 'chest_facing': 'south',
+    'name': 'ring', 'chest_facing': 'west',  # faces the central cairn, latch visible
     'layers': [
         ['.EEEEEEEEE.',
          'EEEEEPEEEEE',
@@ -353,6 +353,14 @@ def build_template(variant):
     })
 
 
+# Blocks with a full sturdy top and bottom face: valid lantern supports, and
+# the only blocks that block a chest lid or bury a chest's latch face.
+FULL_CUBES = {'minecraft:end_stone', 'minecraft:end_stone_bricks', 'minecraft:purpur_block',
+              'minecraft:purpur_pillar', f'{NS}:polished_end_stone', f'{NS}:end_stone_tiles',
+              f'{NS}:chiseled_end_stone_tiles', f'{NS}:enderium_block', f'{NS}:raw_enderium_block'}
+FACING_OFFSET = {'north': (0, 0, -1), 'south': (0, 0, 1), 'west': (-1, 0, 0), 'east': (1, 0, 0)}
+
+
 def validate(path, variant):
     """Reload the emitted file and enforce the covenant's furniture rules."""
     root = nbtlib.load(path)
@@ -361,13 +369,17 @@ def validate(path, variant):
     assert not unknown, f'{path.name}: blocks outside the both-branch whitelist: {unknown}'
 
     by_pos, counts = {}, {}
+    chest_pos, chest_facing = None, None
     for b in root['blocks']:
+        state = root['palette'][int(b['state'])]
         name = palette[int(b['state'])]
         pos = tuple(int(v) for v in b['pos'])
         by_pos[pos] = name
         counts[name] = counts.get(name, 0) + 1
         if name == 'minecraft:chest':
             assert str(b['nbt']['LootTable']) == LOOT_TABLE, f'{path.name}: chest loot table wrong'
+            chest_pos = pos
+            chest_facing = str(state['Properties']['facing'])
 
     def below(pos):
         return by_pos.get((pos[0], pos[1] - 1, pos[2]), 'void')
@@ -376,6 +388,11 @@ def validate(path, variant):
         return by_pos.get((pos[0], pos[1] + 1, pos[2]), 'void')
 
     assert counts.get('minecraft:chest') == 1, f'{path.name}: want exactly 1 chest'
+    assert above(chest_pos) not in FULL_CUBES, f'{path.name}: chest lid blocked by a full cube'
+    dx, _, dz = FACING_OFFSET[chest_facing]
+    front = by_pos.get((chest_pos[0] + dx, chest_pos[1], chest_pos[2] + dz), 'void')
+    assert front not in FULL_CUBES, \
+        f'{path.name}: chest latch face ({chest_facing}) pressed against {front}'
     assert counts.get(f'{NS}:enderium_block') == 1, f'{path.name}: want exactly 1 enderium core'
     assert counts.get(f'{NS}:chiseled_end_stone_tiles', 0) >= 1, f'{path.name}: relief missing'
     assert counts.get(f'{NS}:enderium_lantern', 0) >= 1, f'{path.name}: lantern missing'
@@ -390,8 +407,10 @@ def validate(path, variant):
         props = root['palette'][int(b['state'])].get('Properties', {})
         hanging = str(props.get('hanging', 'false')) == 'true'
         neighbor = above(pos) if hanging else below(pos)
-        assert neighbor not in ('void', 'minecraft:air'), \
-            f'{path.name}: lantern at {pos} has no {"ceiling" if hanging else "floor"}'
+        # canSupportCenter needs a sturdy face: only full cubes qualify (a slab
+        # or stair would pass a non-air check yet pop the lantern on update)
+        assert neighbor in FULL_CUBES, \
+            f'{path.name}: lantern at {pos} {"hangs from" if hanging else "stands on"} {neighbor}, not a full cube'
     size = [int(v) for v in root['size']]
     assert size[0] <= 12 and size[2] <= 12, f'{path.name}: footprint {size} over 12x12'
     return counts
