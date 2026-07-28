@@ -444,18 +444,16 @@ def counted(item, lo, hi):
 
 
 def emit_json():
+    # endrise:cenotaph is a custom type: single-piece jigsaw start that refuses
+    # to generate over void (vanilla jigsaw JSON has no ground condition and a
+    # fresh-world probe hung 8 of 15 vanilla-jigsaw cenotaphs at y=0).
     emit(f'data/{NS}/worldgen/structure/cenotaph.json', {
-        'type': 'minecraft:jigsaw',
+        'type': f'{NS}:cenotaph',
         'biomes': f'#{NS}:has_structure/cenotaph',
-        'max_distance_from_center': 80,
-        'project_start_to_heightmap': 'WORLD_SURFACE_WG',
-        'size': 1,
         'spawn_overrides': {},
-        'start_height': {'absolute': 0},
         'start_pool': f'{NS}:cenotaph/start',
         'step': 'surface_structures',
         'terrain_adaptation': 'beard_thin',
-        'use_expansion_hack': False,
     })
 
     emit(f'data/{NS}/worldgen/structure_set/cenotaphs.json', {

@@ -291,6 +291,14 @@ public class Endrise {
                             .effect(() -> new MobEffectInstance(RETURN_EFFECT, 1800, 0), 1.0F)
                             .build())));
 
+    // ---- Tide 7: the cenotaph needs its own structure type: vanilla jigsaw
+    // JSON has no ground condition and the End is mostly hole. ----
+    public static final DeferredRegister<net.minecraft.world.level.levelgen.structure.StructureType<?>> STRUCTURE_TYPES =
+            DeferredRegister.create(Registries.STRUCTURE_TYPE, MODID);
+    public static final DeferredHolder<net.minecraft.world.level.levelgen.structure.StructureType<?>,
+            net.minecraft.world.level.levelgen.structure.StructureType<CenotaphStructure>> CENOTAPH_STRUCTURE =
+            STRUCTURE_TYPES.register("cenotaph", () -> () -> CenotaphStructure.CODEC);
+
     public static final DeferredRegister<CreativeModeTab> CREATIVE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MODID);
 
@@ -338,6 +346,7 @@ public class Endrise {
         DATA_COMPONENTS.register(modEventBus);
         MOB_EFFECTS.register(modEventBus);
         ATTACHMENTS.register(modEventBus);
+        STRUCTURE_TYPES.register(modEventBus);
         ARMOR_MATERIALS.register(modEventBus);
         CREATIVE_TABS.register(modEventBus);
 
