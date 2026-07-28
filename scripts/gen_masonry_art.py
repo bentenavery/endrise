@@ -159,6 +159,10 @@ def main():
     out['raw_enderium_block'] = rank_swap(load(jar, 'assets/minecraft/textures/block/raw_gold_block.png'), RAMP[1:6])
     out['enderium_lantern'] = rank_swap(load(jar, 'assets/minecraft/textures/block/lantern.png'),
                                         FLAME_TARGETS, select=is_flame)
+    items = resources / 'assets' / 'endrise' / 'textures' / 'item'
+    items.mkdir(parents=True, exist_ok=True)
+    rank_swap(load(jar, 'assets/minecraft/textures/item/lantern.png'),
+              FLAME_TARGETS, select=is_flame).save(items / 'enderium_lantern.png')
     out['polished_end_stone'] = make_polished(end_stone)
     out['end_stone_tiles'] = make_tiles(out['polished_end_stone'])
     out['chiseled_end_stone_tiles'] = make_chiseled(end_stone)
