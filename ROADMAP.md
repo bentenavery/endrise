@@ -6,7 +6,7 @@ Soulbound owns death. Enderium owns every other loss: the void, the despawn time
 
 Detailed designs for the upcoming tides (deliverables, risks, verification, per-version port notes) live in [docs/covenant-of-return.md](docs/covenant-of-return.md).
 
-**Status:** v0.3.0 released on GitHub for both supported versions; the Modrinth listing is submitted and in the review queue.
+**Status:** all eight tides shipped. v1.0.0 is the release candidate, soaking in the alpha channel for a week before the listing is promoted to full release.
 
 ## Shipped
 
@@ -20,10 +20,11 @@ Detailed designs for the upcoming tides (deliverables, risks, verification, per-
 - [x] **Tide 6 (v0.6) — Mourning Blooms**: the world keeps score of loss. End deaths sprout Mourning Blooms; rare natural constellations grow in the outer biomes; blooms craft Void Petals and petals bottle into the Draught of Return (drink, wander 90 seconds, snap back, End-only, last drink re-anchors loudly). The petal economy is open.
 - [x] **Tide 7 (v0.7) — The Cenotaphs**: four ruin variants (vigil, waygate, ring, fallen hall) scattered across the outer End on ground-checked placements that yield to the void: no floating graves, and /locate never lies. Every chest holds one named, worn remembrance (about 40% still Soulbound, and the covenant honors the mark on any metal; one traveler in twelve carried enderium), Void Petals, raw enderium, and a 15% upgrade template: the first renewable template source. Advancement: Someone Was Here.
 
-## The Covenant of Return (Tide 8)
+- [x] **Tide 8 (v1.0) — The Way Home**: the Homeward Pearl (petals + ingots around an ender pearl) carries you from anywhere, any dimension, to your own respawn point, consumed, resolved by vanilla's own bed/anchor rules, and it can never roll the credits. Enderium ore and blocks glimmer with reverse-portal motes and a rare hum. The advancement tab completes its eight-node arc. The 1.0 candidate soaks in alpha for a week before the listing is promoted to full release.
 
-- [ ] **Tide 8 (v1.0) — The Way Home** *(1 weekend)*
-  The Homeward Pearl (petals + ingots around an ender pearl): from anywhere, any dimension, it carries you to your respawn point, consumed. Enderium ore and blocks get ambient teal motes and a rare hum. An advancement tab turns the arc into a guided tour, and the listing is promoted from alpha to the full 1.0 release.
+## After 1.0
+
+The arc is complete; what follows is expansion, not obligation. The strongest candidates, in rough order: the enderium respawn anchor (an End-native "set your home here" block), a neutral mob with real design behind it, and growing the cenotaph start pool with new ruin families. Fresh ideas welcome in issues.
 
 ## Deliberately rejected (so contributors don't re-propose them)
 

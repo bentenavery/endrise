@@ -42,15 +42,17 @@ public class HomewardPearlItem extends Item {
         TeleportTransition transition =
                 serverPlayer.findRespawnPositionAndUseSpawnBlock(false, TeleportTransition.DO_NOTHING);
         ServerLevel from = (ServerLevel) serverPlayer.level();
-        from.playSound(null, serverPlayer.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
-                SoundSource.PLAYERS, 1.0F, 0.9F);
+        net.minecraft.core.BlockPos origin = serverPlayer.blockPosition();
         ServerPlayer moved = serverPlayer.teleport(transition);
         if (moved == null) {
-            return InteractionResult.FAIL;  // dimension travel cancelled: pearl kept
+            return InteractionResult.FAIL;  // travel cancelled by another mod: pearl kept, no noise
         }
+        from.playSound(null, origin, SoundEvents.ENDERMAN_TELEPORT,
+                SoundSource.PLAYERS, 1.0F, 0.9F);
         // cooldown keys off the stack's item id: set it before the stack can empty
         moved.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
-        stack.shrink(1);
+        moved.awardStat(net.minecraft.stats.Stats.ITEM_USED.get(this));
+        stack.consume(1, moved);  // creative keeps its pearl, like every vanilla teleport item
         ServerLevel arrived = (ServerLevel) moved.level();
         arrived.playSound(null, moved.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
                 SoundSource.PLAYERS, 1.0F, 1.1F);
