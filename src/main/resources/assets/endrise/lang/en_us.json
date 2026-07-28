@@ -50,5 +50,14 @@
   "advancements.endrise.the_tier_above.title": "The Tier Above",
   "advancements.endrise.the_tier_above.description": "Hold gear forged beyond netherite",
   "advancements.endrise.the_way_home.title": "The Way Home",
-  "advancements.endrise.the_way_home.description": "Crush a Homeward Pearl and let the End carry you back to your bed"
+  "advancements.endrise.the_way_home.description": "Crush a Homeward Pearl and let the End carry you back to your bed",
+  "jei.endrise.enderium_ore": "Generates in end stone across every End biome (y16-72, small veins). Needs a diamond pickaxe; Fortune scales the raw drops, Silk Touch takes the block. Exposed veins shed faint teal motes: follow the glimmer.",
+  "jei.endrise.materials": "The End's buried metal. It floats in lava and cannot burn at all, and what you drop is never lost: enderium that falls into the void or sits out its despawn timer finds its way home to whoever dropped it.",
+  "jei.endrise.upgrade_template": "Upgrades netherite gear to enderium at the smithing table, the way diamond became netherite. Craftable, and found in roughly one cenotaph chest in seven: the renewable source.",
+  "jei.endrise.mourning_bloom": "The End keeps score of loss: every player death in the End sprouts one on the nearest end stone. Wild patches grow across the outer islands. Plants only on end stone; bonemeal duplicates it.",
+  "jei.endrise.void_petal": "Cut from a Mourning Bloom. The covenant's soft currency: bottled into draughts, wrapped around Homeward Pearls, and buried with the dead in cenotaph chests.",
+  "jei.endrise.draught_of_return": "Drink it where you stand, wander for ninety seconds, and snap back to where you drank. The End only, on both ends of the trip. Milk or death cancels; the last drink re-anchors.",
+  "jei.endrise.homeward_pearl": "Use it anywhere, in any dimension, and arrive at your own respawn point: bed, respawn anchor, or world spawn if the bed is gone. Consumed on use, five-second cooldown, and it never rolls the credits.",
+  "jei.endrise.gear": "The tier above netherite: smith netherite gear with an Enderium Upgrade Template and an ingot; enchantments and durability carry. Takes Soulbound at the anvil (bound gear returns to its slots eight seconds after death), armor negates ender pearl damage, and lost pieces come back from the void.",
+  "jei.endrise.soulbound_tome": "Craft it, then bind it to enderium gear at the anvil; the anvil accepts nothing else. Bound gear skips your death drops entirely and teleports back into the slots it left, eight seconds later. Cenotaph remembrances sometimes carry the mark on plain iron and diamond: the covenant honors those too."
 }
