@@ -38,20 +38,28 @@ public class HomewardPearlItem extends Item {
         if (!(player instanceof ServerPlayer serverPlayer)) {
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
         }
+        // changeDimension never dismounts on this branch (26.x's teleport()
+        // does): without this, a mounted pearl is spent and the vehicle snaps
+        // the rider straight back. Mirrors vanilla ChorusFruitItem.
+        if (serverPlayer.isPassenger()) {
+            serverPlayer.stopRiding();
+        }
         // true = a respawn anchor keeps its charge on 1.21.1: the decrement
         // guard here is (!forced && !flag), the inverse of 26.x's
         // consumeSpawnBlock. The pearl itself is the price on both branches.
         DimensionTransition transition =
                 serverPlayer.findRespawnPositionAndUseSpawnBlock(true, DimensionTransition.DO_NOTHING);
         ServerLevel from = serverPlayer.serverLevel();
-        from.playSound(null, serverPlayer.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
-                SoundSource.PLAYERS, 1.0F, 0.9F);
+        net.minecraft.core.BlockPos origin = serverPlayer.blockPosition();
         Entity moved = serverPlayer.changeDimension(transition);
         if (!(moved instanceof ServerPlayer arrivedPlayer)) {
-            return InteractionResultHolder.fail(stack);  // travel cancelled: pearl kept
+            return InteractionResultHolder.fail(stack);  // travel cancelled by another mod: pearl kept, no noise
         }
+        from.playSound(null, origin, SoundEvents.ENDERMAN_TELEPORT,
+                SoundSource.PLAYERS, 1.0F, 0.9F);
         arrivedPlayer.getCooldowns().addCooldown(this, COOLDOWN_TICKS);
-        stack.shrink(1);
+        arrivedPlayer.awardStat(net.minecraft.stats.Stats.ITEM_USED.get(this));
+        stack.consume(1, arrivedPlayer);  // creative keeps its pearl, like every vanilla teleport item
         ServerLevel arrived = arrivedPlayer.serverLevel();
         arrived.playSound(null, arrivedPlayer.blockPosition(), SoundEvents.ENDERMAN_TELEPORT,
                 SoundSource.PLAYERS, 1.0F, 1.1F);

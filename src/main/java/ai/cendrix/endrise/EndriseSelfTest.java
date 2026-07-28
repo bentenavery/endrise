@@ -381,6 +381,48 @@ public final class EndriseSelfTest {
         ok &= report(resolved.newLevel() == overworld && !endPlayer.seenCredits,
                 "way home: spawnless resolution leaves the End for world spawn, credits untouched");
 
+        // The inverted-polarity regression: the pearl flag must NOT spend a
+        // respawn anchor charge, the death flag MUST. This boolean is the most
+        // drift-prone value in the tide (26.x consumeSpawnBlock=false keeps the
+        // charge; on 1.21.1 the keep-flag is true), and without a charged
+        // anchor in play it is dead code to every other test.
+        ServerLevel nether = server.getLevel(net.minecraft.world.level.Level.NETHER);
+        var anchorPos = new net.minecraft.core.BlockPos(48, 100, 48);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                nether.setBlockAndUpdate(anchorPos.offset(dx, -1, dz),
+                        net.minecraft.world.level.block.Blocks.OBSIDIAN.defaultBlockState());
+                for (int dy = 1; dy <= 2; dy++) {
+                    nether.setBlockAndUpdate(anchorPos.offset(dx, dy, dz),
+                            net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                }
+                if (dx != 0 || dz != 0) {
+                    nether.setBlockAndUpdate(anchorPos.offset(dx, 0, dz),
+                            net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+                }
+            }
+        }
+        nether.setBlockAndUpdate(anchorPos, net.minecraft.world.level.block.Blocks.RESPAWN_ANCHOR
+                .defaultBlockState().setValue(net.minecraft.world.level.block.RespawnAnchorBlock.CHARGE, 4));
+        ServerPlayer anchored = net.neoforged.neoforge.common.util.FakePlayerFactory.get(nether,
+                new com.mojang.authlib.GameProfile(
+                        java.util.UUID.nameUUIDFromBytes("endrise-wayhome-anchor".getBytes()),
+                        "EndriseWayHomeAnchor"));
+        anchored.setRespawnPosition(net.minecraft.world.level.Level.NETHER, anchorPos, 0.0F, false, false);
+        var pearlWay = anchored.findRespawnPositionAndUseSpawnBlock(true, net.minecraft.world.level.portal.DimensionTransition.DO_NOTHING);
+        int afterPearl = nether.getBlockState(anchorPos)
+                .getValue(net.minecraft.world.level.block.RespawnAnchorBlock.CHARGE);
+        var deathWay = anchored.findRespawnPositionAndUseSpawnBlock(false, net.minecraft.world.level.portal.DimensionTransition.DO_NOTHING);
+        int afterDeath = nether.getBlockState(anchorPos)
+                .getValue(net.minecraft.world.level.block.RespawnAnchorBlock.CHARGE);
+        ok &= report(pearlWay.newLevel() == nether && afterPearl == 4
+                        && deathWay.newLevel() == nether && afterDeath == 3,
+                "way home: the pearl leaves anchor charges alone, death still spends one");
+
+        var boundAdv = server.getAdvancements().get(Endrise.id("bound"));
+        ok &= report(boundAdv != null && boundAdv.value().criteria().containsKey("bound"),
+                "way home: Bound's anvil award criterion is wired");
+
         // The full use() on an overworld fake player (same-dimension travel):
         // consumed, cooldown armed, criterion wired, credits never shown.
         ServerPlayer user = net.neoforged.neoforge.common.util.FakePlayerFactory.get(overworld,
