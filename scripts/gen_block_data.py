@@ -252,9 +252,10 @@ emit(f'data/{NS}/worldgen/placed_feature/mourning_blooms.json', {
         {'type': 'minecraft:in_square'},
         {'type': 'minecraft:heightmap', 'heightmap': 'MOTION_BLOCKING'},
         {'type': 'minecraft:count', 'count': 5},
+        # uniform: the trapezoid INT provider does not exist on 1.21.1
         {'type': 'minecraft:random_offset',
-         'xz_spread': {'type': 'minecraft:trapezoid', 'min': -4, 'max': 4, 'plateau': 0},
-         'y_spread': {'type': 'minecraft:trapezoid', 'min': -2, 'max': 2, 'plateau': 0}},
+         'xz_spread': {'type': 'minecraft:uniform', 'min_inclusive': -4, 'max_inclusive': 4},
+         'y_spread': {'type': 'minecraft:uniform', 'min_inclusive': -2, 'max_inclusive': 2}},
         {'type': 'minecraft:block_predicate_filter',
          'predicate': {'type': 'minecraft:matching_block_tag', 'tag': 'minecraft:air'}},
         {'type': 'minecraft:biome'},
