@@ -1,0 +1,8 @@
+{
+  "type": "endrise:cenotaph",
+  "biomes": "#endrise:has_structure/cenotaph",
+  "spawn_overrides": {},
+  "start_pool": "endrise:cenotaph/start",
+  "step": "surface_structures",
+  "terrain_adaptation": "beard_thin"
+}

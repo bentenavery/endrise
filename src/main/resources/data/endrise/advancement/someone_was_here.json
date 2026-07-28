@@ -1,0 +1,40 @@
+{
+  "parent": "endrise:there_and_back",
+  "display": {
+    "title": {
+      "translate": "advancements.endrise.someone_was_here.title"
+    },
+    "description": {
+      "translate": "advancements.endrise.someone_was_here.description"
+    },
+    "icon": {
+      "id": "endrise:chiseled_end_stone_tiles"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true
+  },
+  "criteria": {
+    "entered": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "endrise:cenotaph"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "entered"
+    ]
+  ]
+}
