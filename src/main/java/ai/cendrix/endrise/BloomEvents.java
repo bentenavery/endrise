@@ -54,8 +54,15 @@ public final class BloomEvents {
         if (event.getEntity() instanceof ServerPlayer player
                 && event.getEffectInstance() != null
                 && event.getEffectInstance().is(Endrise.RETURN_EFFECT)) {
+            boolean reanchor = event.getOldEffectInstance() != null;
             player.setData(Endrise.RETURN_ANCHOR.get(),
                     GlobalPos.of(player.level().dimension(), player.blockPosition()));
+            if (reanchor) {
+                // Last drink wins, and says so: a silent re-anchor reads as a lost anchor
+                player.sendSystemMessage(net.minecraft.network.chat.Component
+                        .translatable("chat.endrise.reanchored")
+                        .withStyle(style -> style.withColor(0x2FC39D)), true);
+            }
         }
     }
 
@@ -64,6 +71,12 @@ public final class BloomEvents {
         if (event.getEntity() instanceof ServerPlayer player
                 && event.getEffectInstance() != null
                 && event.getEffectInstance().is(Endrise.RETURN_EFFECT)) {
+            // Corpses on the death screen still tick effects (Tide 4's lesson):
+            // never teleport the dead or award their return. The anchor dies
+            // with them: attachments do not copy through respawn.
+            if (!player.isAlive()) {
+                return;
+            }
             completeReturn(player);
         }
     }

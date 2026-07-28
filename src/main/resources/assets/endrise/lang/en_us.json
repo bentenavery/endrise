@@ -38,5 +38,6 @@
   "item.endrise.draught_of_return": "Draught of Return",
   "effect.endrise.return": "Return",
   "advancements.endrise.there_and_back.title": "There and Back",
-  "advancements.endrise.there_and_back.description": "Drink a Draught of Return and let it carry you home"
+  "advancements.endrise.there_and_back.description": "Drink a Draught of Return and let it carry you home",
+  "chat.endrise.reanchored": "The draught re-anchors here."
 }

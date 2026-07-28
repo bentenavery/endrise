@@ -22,6 +22,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 
 /**
  * Headless verification of the enderium tier: the smithing upgrade path
@@ -302,6 +303,17 @@ public final class EndriseSelfTest {
                     net.minecraft.core.GlobalPos.of(net.minecraft.world.level.Level.OVERWORLD, home));
             ok &= report(BloomEvents.completeReturn(endPlayer) == BloomEvents.ReturnResult.FIZZLED,
                     "draught: an overworld anchor fizzles");
+
+            // Corpse-tick regression: expiry on the death screen must not fire the return
+            endPlayer.setData(Endrise.RETURN_ANCHOR.get(),
+                    net.minecraft.core.GlobalPos.of(net.minecraft.world.level.Level.END, home));
+            endPlayer.setHealth(0.0F);
+            BloomEvents.onEffectExpired(new MobEffectEvent.Expired(endPlayer,
+                    new net.minecraft.world.effect.MobEffectInstance(Endrise.RETURN_EFFECT, 1, 0)));
+            boolean heldThroughDeath = endPlayer.hasData(Endrise.RETURN_ANCHOR.get());
+            endPlayer.setHealth(20.0F);
+            endPlayer.removeData(Endrise.RETURN_ANCHOR.get());
+            ok &= report(heldThroughDeath, "draught: expiry on a corpse is ignored");
         }
         return ok;
     }

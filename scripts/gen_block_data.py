@@ -238,11 +238,13 @@ for it in ('void_petal', 'draught_of_return'):
              {'model': {'type': 'minecraft:model', 'model': f'{NS}:item/{it}'}})
 
 # worldgen: rare constellations, never the dragon island
-# 26.x dropped the random_patch wrapper: patch shape lives in the PLACED chain
-# (count + random_offset), and simple_block self-validates the ground.
-cf = crib('data/minecraft/worldgen/configured_feature/flower_default.json')
-cf = rewrite(cf, {'minecraft:dandelion': f'{NS}:{BLOOM}', 'minecraft:poppy': f'{NS}:{BLOOM}'})
-emit(f'data/{NS}/worldgen/configured_feature/mourning_blooms.json', cf)
+# Branch-stable inner feature: on 1.21.1 flower_default is random_patch-WRAPPED,
+# and cribbing it there would double-patch (~64x density). simple_block exists on
+# both branches and self-validates the ground, so the placed chain stays shared.
+emit(f'data/{NS}/worldgen/configured_feature/mourning_blooms.json', {
+    'type': 'minecraft:simple_block',
+    'config': {'to_place': {'type': 'minecraft:simple_state_provider',
+                            'state': {'Name': f'{NS}:{BLOOM}'}}}})
 emit(f'data/{NS}/worldgen/placed_feature/mourning_blooms.json', {
     'feature': f'{NS}:mourning_blooms',
     'placement': [
