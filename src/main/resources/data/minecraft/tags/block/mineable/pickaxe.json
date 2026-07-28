@@ -1,5 +1,15 @@
 {
   "values": [
-    "endrise:enderium_ore"
+    "endrise:enderium_ore",
+    "endrise:polished_end_stone",
+    "endrise:end_stone_tiles",
+    "endrise:chiseled_end_stone_tiles",
+    "endrise:enderium_block",
+    "endrise:raw_enderium_block",
+    "endrise:polished_end_stone_stairs",
+    "endrise:end_stone_tile_stairs",
+    "endrise:polished_end_stone_slab",
+    "endrise:end_stone_tile_slab",
+    "endrise:enderium_lantern"
   ]
 }

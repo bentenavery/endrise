@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "endrise:block/enderium_lantern"
+    },
+    "hanging=true": {
+      "model": "endrise:block/enderium_lantern_hanging"
+    }
+  }
+}
