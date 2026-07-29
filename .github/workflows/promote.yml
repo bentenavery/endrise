@@ -1,0 +1,43 @@
+name: Promote
+# Flips the Modrinth channel for every published version of a given mod
+# version (e.g. 26.1.2-1.0.1 and 1.21.1-1.0.1) from alpha to release.
+# The alpha-soak exit: run it once the release candidate has earned its keep.
+# Needs: repo variable MODRINTH_ID + secret MODRINTH_TOKEN.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Mod version to promote (e.g. 1.0.1)"
+        required: true
+
+permissions: {}
+
+jobs:
+  promote:
+    if: vars.MODRINTH_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Promote to release channel
+        env:
+          TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          PROJECT: ${{ vars.MODRINTH_ID }}
+          VER: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          ids=$(curl -sf -H "Authorization: $TOKEN" \
+            "https://api.modrinth.com/v2/project/$PROJECT/version" \
+            | jq -r --arg ver "$VER" \
+              '.[] | select(.version_number | endswith("-" + $ver)) | .id')
+          if [ -z "$ids" ]; then
+            echo "::error::no Modrinth versions matched -$VER" >&2
+            exit 1
+          fi
+          for id in $ids; do
+            num=$(curl -sf -H "Authorization: $TOKEN" \
+              "https://api.modrinth.com/v2/version/$id" | jq -r .version_number)
+            curl -sf -X PATCH "https://api.modrinth.com/v2/version/$id" \
+              -H "Authorization: $TOKEN" -H "Content-Type: application/json" \
+              -d '{"version_type":"release"}'
+            echo "promoted $num ($id) -> release"
+          done
