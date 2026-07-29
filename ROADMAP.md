@@ -6,7 +6,7 @@ Soulbound owns death. Enderium owns every other loss: the void, the despawn time
 
 Detailed designs for the upcoming tides (deliverables, risks, verification, per-version port notes) live in [docs/covenant-of-return.md](docs/covenant-of-return.md).
 
-**Status:** all eight tides shipped. v1.0.0 is the release candidate, soaking in the alpha channel for a week before the listing is promoted to full release.
+**Status:** 1.0 is out. All eight tides shipped; v1.0.1 (with JEI integration) is published on the release channel. The Modrinth listing goes public the moment moderation approves it.
 
 ## Shipped
 
