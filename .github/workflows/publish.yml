@@ -57,7 +57,8 @@ jobs:
           files: dist/*.jar
           name: "Endrise ${{ steps.rel.outputs.ver }} for MC ${{ matrix.mc }}"
           version: "${{ matrix.mc }}-${{ steps.rel.outputs.ver }}"
-          version-type: alpha
+          # release-channel by default since 1.0 shipped; the alpha era is over
+          version-type: release
           loaders: neoforge
           game-versions: ${{ matrix.mc }}
           changelog: ${{ steps.rel.outputs.body }}
