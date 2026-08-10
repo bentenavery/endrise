@@ -46,12 +46,26 @@ Response:
 - `commands` may be empty (timeout with nothing queued).
 - The server dispatches **at most one command per poll response** (simplifies undo
   recording and result attribution; queued commands go out on subsequent polls).
+  The plugin must nonetheless iterate every entry it receives, in order, so nothing
+  is silently dropped if a server ever batches.
 - If a poll arrives with a new `session` value (Studio restarted / place reopened),
   the server drops any in-flight command state for the old session and fails those
   pending MCP calls with "Studio plugin reconnected".
 
 Connectivity: the server considers the plugin **connected** if any poll arrived within
-the last **35 seconds**.
+the last **35 seconds**, OR a dispatched command is still awaiting its result (a
+long-running `run_code` starves the poll loop; that is proof of liveness, not absence).
+
+Session change: when a poll arrives with a new `session`, the server must also flush
+every parked long-poll from the old session (respond `{ok:true, commands:[]}`) so a
+zombie poll left open by the old plugin instance cannot steal the next command.
+
+Poll validation: `session` must be a non-empty string (else 400). `place` fields are
+validated (`name` string, `placeId`/`gameId` finite numbers); a malformed `place`
+keeps the previous value rather than surfacing garbage.
+
+Oversized bodies (server limit 8 MB) get a JSON `{ok:false}` 400 response, not a
+connection reset.
 
 ### POST /mcl/result
 Plugin reports the outcome of one command.
@@ -127,7 +141,11 @@ contiguous integer keys from 1). Depth limit **8**, total-node limit **10000** p
 result; on hitting a limit emit the string `"<truncated>"` in place of deeper content.
 Cycles emit `"<cycle>"`. Non-serializable values (functions, threads, userdata with no
 mapping) emit `"<TypeName>"` e.g. `"<function>"`. NaN/±inf encode as strings
-`"nan"`, `"inf"`, `"-inf"` in place of the number. Mixed-key tables: encode the
+`"nan"`, `"inf"`, `"-inf"` in place of the number — including numeric components
+INSIDE tagged datatypes (CFrame, Color3, UDim(2), NumberRange, sequences, Rect), never
+raw NaN in JSON. `nil` return values / array holes encode as the string `"<nil>"`
+(JSON null can't survive `HttpService:JSONEncode` inside arrays). Empty Lua tables
+encode as `[]`; the server must treat `[]` and `{}` as equivalently empty. Mixed-key tables: encode the
 string-keyed entries in an object; non-string keys become `tostring(key)` prefixed
 with `"$k:"` only if a collision would result — otherwise just `tostring(key)`.
 
@@ -139,13 +157,20 @@ descendant of `game`, encode as `{"$type":"Instance","value":"<detached>","name"
 
 ## 3. Command execution semantics (plugin side)
 
-- The plugin executes commands **one at a time, in order received**.
+- The plugin executes commands **one at a time, in order received**, each in a
+  **spawned task** watched by the poll loop with a deadline of
+  `clamp(args.timeout_seconds or 30, 1, 300)` seconds. On deadline the plugin posts
+  `ok:false, error:"command timed out in Studio"` and resumes polling — a yielding
+  runaway never wedges the bridge. (Non-yielding code, e.g. `while true do end`,
+  cannot be preempted by Luau; the timeout covers everything that yields.)
 - Every mutating tool (`run_code`, `set_properties`, `create_instance`,
-  `delete_instances`, `insert_asset`, `set_waypoint`) wraps execution in
+  `delete_instances`, `insert_asset`) wraps execution in
   `ChangeHistoryService:TryBeginRecording(desc)` → `FinishRecording(recording,
   Enum.FinishRecordingOperation.Commit)`. If `TryBeginRecording` returns nil
   (recording already active), execute anyway without a new recording. On execution
   error, still `FinishRecording(..., Commit)` so partial changes remain undoable.
+  `set_waypoint` is deliberately NOT recording-wrapped: `SetWaypoint` is ignored
+  while a recording is in progress, so it must run outside one.
 - `run_code` executes via `loadstring(code)`; the compiled function's environment is
   replaced (`setfenv`) with a table whose `__index` falls through to the plugin's
   global environment but overrides `print` and `warn` to ALSO capture into the
@@ -153,10 +178,13 @@ descendant of `game`, encode as `{"$type":"Instance","value":"<detached>","name"
   caught with `xpcall` using `debug.traceback` as the handler.
 - **Pause**: dock toggle. While paused the plugin keeps polling with
   `accepting:false` and keeps sending/receiving chat, but the server withholds
-  commands. MCP tool calls issued while paused fail fast server-side with
+  commands. Because the server answers paused polls immediately (no long hold), the
+  plugin must pace paused polls to **at most one per second** — otherwise it
+  busy-loops through Studio's HttpService request budget. MCP tool calls issued while paused fail fast server-side with
   `"MCL is paused in Studio — press Resume in the MCL dock."` EXCEPT `say`,
   `read_chat`, and `get_studio_status`, which work while paused.
-- Every executed command produces an **activity card** in the dock: tool name, the
+- Every executed command **except `say`** produces an **activity card** in the dock
+  (`say` renders as an assistant chat bubble per §5, not a card): tool name, the
   `description` argument if present (else a compact auto-summary like
   `set_properties: game.Workspace.Part`), spinner while running, then green/red
   status with duration. Errors render the message in red under the card.
@@ -203,7 +231,9 @@ queuedUserMessages }` (`place` etc. null when never connected).
 Args: `{ code: string, description?: string, timeout_seconds?: number (1–300, default 30) }`
 Runs Luau in Studio (edit mode, plugin security). Returns
 `{ returns: [encoded...], logs: [{level, text}], durationMs }` — `returns` holds the
-code's return values (up to 8, encoded per §2).
+code's return values (up to 8, encoded per §2). `logs` captures `print` and `warn`
+output (`level` is `"print"` or `"warn"`; the `"error"` level is reserved — runtime
+errors surface in the failure message, not as log entries).
 
 ### say
 Args: `{ message: string }`. Posts an assistant chat bubble to the Studio dock. This is
@@ -221,6 +251,8 @@ expires. Returns `{ messages: [{text, sentAt}], studioConnected }`.
 Args: `{ path?: string = "game", max_depth?: number (1–10, default 2),
 class_filter?: string, include_services?: boolean = false }`
 Returns the instance tree: `{ name, className, path, children?: [...] }`.
+`max_depth` counts levels of children below the root: the default 2 returns the root
+plus its children and grandchildren.
 `class_filter` keeps only nodes that are the class/subclass (`IsA`) OR have a matching
 descendant. When `path` is `"game"`, only well-known buildy services (Workspace,
 Lighting, ReplicatedStorage, ServerStorage, ServerScriptService, StarterGui,
@@ -291,6 +323,9 @@ undo step boundary.
 - `say` bypasses the pause gate; `run_code`/mutating tools respect it.
 - Chat queue: FIFO cap 200. `read_chat` drains all pending at once.
 - Server version string surfaces in `/mcl/status` and `get_studio_status`.
+- **Shutdown**: when the MCP client goes away (stdin end/close, transport close) or on
+  SIGINT/SIGTERM, the server must close the HTTP bridge (flush parked polls, reject
+  pending commands) and exit — an orphaned process must never keep holding the port.
 
 ## 7. Plugin internals (normative)
 
@@ -309,7 +344,10 @@ undo step boundary.
 - UI theme: colors from `settings().Studio.Theme:GetColor(...)` with sensible
   fallbacks, re-applied on `ThemeChanged`.
 - The dock header shows: status dot (green connected / yellow connecting / red
-  disconnected), place name, Pause/Resume button, gear button revealing a port field
+  disconnected) WITH the matching status word ("Connected" / "Connecting" /
+  "Disconnected") rendered as text — docs and server error messages tell users to
+  look for the word, so it must exist — place name, Pause/Resume button, a settings
+  button revealing a port field
   (saved via `plugin:SetSetting("mcl_port", n)`; takes effect on next poll).
 - Every chat/user/AI/activity item appends to a ScrollingFrame with auto-scroll
   (unless the user has scrolled up more than one screen — then don't yank).

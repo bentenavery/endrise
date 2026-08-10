@@ -38,3 +38,7 @@ run/
 **/src/generated/**/.cache/
 repo/
 !**/src/**/repo/
+
+### Roblox MCL ###
+roblox-mcl/server/node_modules/
+roblox-mcl/server/dist/
