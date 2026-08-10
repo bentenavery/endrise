@@ -1,0 +1,9 @@
+{
+  "name": "MCL",
+  "syncRules": [
+    { "pattern": "MCL.lua", "use": "serverScript" }
+  ],
+  "tree": {
+    "$path": "MCL.lua"
+  }
+}

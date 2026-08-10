@@ -1,0 +1,26 @@
+{
+  "name": "mcl-studio-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCL (Model Context Link) MCP server: stdio MCP on one side, localhost HTTP bridge to the Roblox Studio plugin on the other.",
+  "type": "module",
+  "bin": {
+    "mcl-studio-server": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "node test/integration.mjs",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}

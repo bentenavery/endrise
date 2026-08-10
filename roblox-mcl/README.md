@@ -106,10 +106,10 @@ The dock is a two-way channel, not just a viewer:
 
 ## Troubleshooting
 
-- **Dock says Disconnected** — the server isn't running (start a conversation in your MCP client so it launches the server), or the port doesn't match. Click the gear icon in the dock header and check the port equals the server's (default `28650`, or whatever `MCL_PORT` is set to).
+- **Dock says Disconnected** — the server isn't running (start a conversation in your MCP client so it launches the server), or the port doesn't match. Click the **Port...** button in the dock header and check the port equals the server's (default `28650`, or whatever `MCL_PORT` is set to).
 - **"Http requests are not enabled" error** — enable **Game Settings → Security → Allow HTTP Requests** in Studio, then republish/retry.
 - **Plugin permission prompt / permission error** — Studio gates plugin HTTP. Go to **Plugin Management** and allow the MCL plugin to access `127.0.0.1`.
-- **Server exits with "port busy"** — something else owns 28650. Set `MCL_PORT` in the server's environment (e.g. in the MCP client config) and update the port in the dock's gear menu to match.
+- **Server exits with "port busy"** — something else owns 28650. Set `MCL_PORT` in the server's environment (e.g. in the MCP client config) and update the port via the dock's **Port...** button to match.
 
 ## Security notes
 
